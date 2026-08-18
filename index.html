@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VR 3D NFT Scanner – Hologram Gallery</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- Three.js + WebXR + GLTFLoader via CDN (importmap for modern browsers) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.168.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.168.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="ui">
+    <div id="header">
+      <h1>VR 3D NFT Scanner</h1>
+      <p class="subtitle">Scan → Hologram → NFT → Trade</p>
+    </div>
+
+    <div id="panel">
+      <button id="enter-vr" class="primary">Enter VR</button>
+      <button id="connect-wallet" class="secondary" disabled title="Coming soon">Connect Wallet</button>
+      <div class="info">
+        <p><strong>My Collection</strong></p>
+        <ul id="collection-list">
+          <li>Duck (Sample Hologram)</li>
+          <li class="placeholder">+ Scan or Mint more...</li>
+        </ul>
+      </div>
+      <div class="info marketplace">
+        <p><strong>Marketplace</strong> <span class="badge">Soon</span></p>
+        <p class="small">Buy, sell & trade 3D holograms</p>
+      </div>
+    </div>
+
+    <div id="instructions">
+      <p>Click <strong>Enter VR</strong> or put on a headset.</p>
+      <p>Use controllers / hands to grab and inspect holograms.</p>
+    </div>
+  </div>
+
+  <div id="loading">Loading hologram gallery...</div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
