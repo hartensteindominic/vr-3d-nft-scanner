@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VR 3D NFT Scanner – Scan • Hologram • AR/VR • Trade</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description" content="VR 3D NFT Scanner – Scan real-world objects with your phone or headset, turn them into floating holograms, mint as tradeable 3D NFTs, view in true WebXR AR & VR, buy sell and trade digital twins." />
+  <meta name="theme-color" content="#04040a" />
+  <title>VR 3D NFT Scanner – Scan • Hologram • AR/VR • Trade Digital Twins</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
   <script type="importmap">
   {
@@ -16,14 +21,19 @@
   </script>
 </head>
 <body>
+  <!-- Full-screen 3D Viewport (Duck-style floating holograms) -->
   <div id="viewport-container">
     <div id="loading-overlay">
       <div class="spinner"></div>
-      <p>Initializing hologram engine...</p>
+      <p class="loading-title">Initializing hologram engine...</p>
+      <p class="loading-sub">Loading Duck sample • WebXR AR/VR • NFT pipeline</p>
     </div>
   </div>
 
-  <!-- Top Navigation -->
+  <!-- Floating ambient particles (CSS) -->
+  <div id="particles" aria-hidden="true"></div>
+
+  <!-- Top Navigation Bar -->
   <header id="top-bar">
     <div class="logo">
       <span class="logo-icon">◈</span>
@@ -38,6 +48,7 @@
       <button class="nav-btn" data-view="library">Library</button>
       <button class="nav-btn" data-view="marketplace">Marketplace</button>
       <button class="nav-btn" data-view="create">Create</button>
+      <button class="nav-btn" data-view="about">About</button>
     </nav>
 
     <div class="top-actions">
@@ -49,13 +60,32 @@
     </div>
   </header>
 
-  <!-- CREATE / CAPTURE PANEL -->
+  <!-- Center Hero Overlay (shows on Gallery) -->
+  <div id="hero-overlay" class="hero-overlay">
+    <div class="hero-content">
+      <h2 class="hero-title">Scan the Real World.<br/>Own the Digital Twin.</h2>
+      <p class="hero-desc">Capture any object with Polycam / Scaniverse, turn it into a floating hologram, mint it as an NFT, place it in true AR, explore in VR, and trade it on the open marketplace.</p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" data-view="create">Start Creating</button>
+        <button class="btn btn-secondary" id="btn-view-duck">Focus Duck Sample</button>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-pill"><span>1</span> Live Hologram</div>
+        <div class="stat-pill"><span>WebXR</span> AR + VR Ready</div>
+        <div class="stat-pill"><span>IPFS</span> + Polygon</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREATE / CAPTURE PANEL (left) -->
   <aside id="create-panel" class="side-panel left hidden">
     <div class="panel-header">
-      <h2>Create New Hologram</h2>
+      <h2>Create New Hologram NFT</h2>
       <button class="close-panel" data-panel="create">×</button>
     </div>
     <div class="panel-body">
+      <p class="panel-desc">Scan a real object or upload an existing GLB. We turn it into a floating hologram you can mint, place in AR, and trade.</p>
+
       <div class="scan-modes">
         <button class="mode-btn active" data-mode="guided">Guided Scan</button>
         <button class="mode-btn" data-mode="upload">Upload GLB</button>
@@ -63,97 +93,284 @@
 
       <div id="guided-scan" class="mode-content">
         <div class="step-cards">
-          <div class="step-card"><span>1</span><p>Place object in good light on a flat surface</p></div>
-          <div class="step-card"><span>2</span><p>Open Polycam or Scaniverse and circle slowly</p></div>
-          <div class="step-card"><span>3</span><p>Export as <strong>GLB</strong> and upload here</p></div>
+          <div class="step-card"><span>1</span><div><strong>Prepare the object</strong><p>Good even light, flat non-reflective surface, no moving parts if possible.</p></div></div>
+          <div class="step-card"><span>2</span><div><strong>Scan with phone</strong><p>Open <strong>Polycam</strong> or <strong>Scaniverse</strong>. Circle slowly 360°. Capture top + bottom if needed.</p></div></div>
+          <div class="step-card"><span>3</span><div><strong>Export GLB</strong><p>Choose GLB / glTF Binary. Keep textures if available. Download to device.</p></div></div>
+          <div class="step-card"><span>4</span><div><strong>Upload here</strong><p>Switch to Upload tab, drop the file, name it, generate AI description, mint.</p></div></div>
         </div>
-        <button id="btn-start-scan-guide" class="btn btn-secondary full">How to Scan</button>
+        <button id="btn-start-scan-guide" class="btn btn-secondary full">Open Detailed Scan Guide</button>
+        <div class="tip-box">
+          <strong>Pro tip</strong>
+          <p>For best results keep the object 30–80 cm away and move at a steady pace. Avoid shiny metal and pure black surfaces when possible.</p>
+        </div>
       </div>
 
       <div id="upload-mode" class="mode-content hidden">
         <div id="drop-zone" class="drop-zone">
           <div class="drop-icon">⬆</div>
-          <p>Drop your <strong>.glb</strong> file here</p>
-          <span class="small">or click to browse</span>
-          <input type="file" id="file-input" accept=".glb,.gltf" hidden />
+          <p>Drop your <strong>.glb</strong> or <strong>.gltf</strong> file here</p>
+          <span class="small">or click to browse from device</span>
+          <input type="file" id="file-input" accept=".glb,.gltf,model/gltf-binary,model/gltf+json" hidden />
         </div>
+        <p class="small center">Recommended: < 25 MB for smooth AR performance</p>
       </div>
 
       <div id="current-model-info" class="model-card">
-        <p class="empty">No model loaded yet</p>
+        <p class="empty">No model loaded yet — scan or upload to begin</p>
       </div>
 
       <div class="form-group">
-        <label>Name</label>
-        <input type="text" id="nft-name" placeholder="My Scanned Object" maxlength="64" />
+        <label for="nft-name">NFT Name</label>
+        <input type="text" id="nft-name" placeholder="e.g. Vintage Camera Hologram" maxlength="64" />
       </div>
       <div class="form-group">
-        <label>Description <button id="btn-ai-desc" class="btn-ai" title="Generate with AI">✦ AI</button></label>
-        <textarea id="nft-desc" placeholder="Describe your hologram..." rows="3"></textarea>
+        <label for="nft-desc">Description <button id="btn-ai-desc" class="btn-ai" title="Generate rich description with AI">✦ AI Generate</button></label>
+        <textarea id="nft-desc" placeholder="Describe the object, its story, materials, and why this digital twin matters..." rows="4"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group half">
+          <label for="nft-category">Category</label>
+          <select id="nft-category">
+            <option value="object">Everyday Object</option>
+            <option value="art">Art / Sculpture</option>
+            <option value="collectible">Collectible</option>
+            <option value="product">Product / Prototype</option>
+            <option value="nature">Nature / Organic</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group half">
+          <label for="nft-rarity">Rarity Tag</label>
+          <select id="nft-rarity">
+            <option value="common">Common</option>
+            <option value="uncommon">Uncommon</option>
+            <option value="rare">Rare</option>
+            <option value="legendary">Legendary</option>
+          </select>
+        </div>
       </div>
 
       <div class="action-stack">
-        <button id="btn-prepare-mint" class="btn btn-secondary full" disabled>1. Upload to IPFS</button>
-        <button id="btn-mint" class="btn btn-primary full" disabled>2. Mint as NFT</button>
-        <button id="btn-clear-model" class="btn btn-ghost full hidden">Clear Model</button>
+        <button id="btn-prepare-mint" class="btn btn-secondary full" disabled>1. Upload Model + Metadata to IPFS</button>
+        <button id="btn-mint" class="btn btn-primary full" disabled>2. Mint as NFT on Polygon</button>
+        <button id="btn-clear-model" class="btn btn-ghost full hidden">Clear Current Model</button>
       </div>
       <div id="mint-status" class="status-box hidden"></div>
+
+      <div class="info-card">
+        <h4>What happens next?</h4>
+        <ul>
+          <li>Model + metadata pinned to IPFS (decentralized)</li>
+          <li>ERC-721 minted on Polygon Amoy (or mainnet)</li>
+          <li>Token URI points to the 3D model for wallets & marketplaces</li>
+          <li>You can place it in AR, view in VR, list for sale</li>
+        </ul>
+      </div>
     </div>
   </aside>
 
-  <!-- LIBRARY PANEL -->
+  <!-- LIBRARY PANEL (right) -->
   <aside id="library-panel" class="side-panel right hidden">
     <div class="panel-header">
-      <h2>My Library</h2>
+      <h2>My Hologram Library</h2>
       <button class="close-panel" data-panel="library">×</button>
     </div>
     <div class="panel-body">
-      <p class="panel-desc">Your owned 3D hologram NFTs</p>
+      <p class="panel-desc">All 3D hologram NFTs you own. Click to focus in the gallery or take into AR/VR.</p>
+      <div class="library-actions">
+        <button id="btn-refresh-library" class="btn btn-ghost small">Refresh</button>
+      </div>
       <div id="library-list" class="card-list">
         <div class="empty-state">
-          <p>Connect wallet & mint to build your library</p>
+          <div class="empty-icon">◈</div>
+          <p>Connect your wallet and mint your first scanned object to start building your library of digital twins.</p>
         </div>
+      </div>
+      <div class="info-card muted">
+        <p>Library items are stored on-chain. Demo mode shows simulated ownership after you mint.</p>
       </div>
     </div>
   </aside>
 
-  <!-- MARKETPLACE PANEL -->
+  <!-- MARKETPLACE PANEL (right) -->
   <aside id="marketplace-panel" class="side-panel right hidden">
     <div class="panel-header">
-      <h2>Marketplace</h2>
+      <h2>Hologram Marketplace</h2>
       <button class="close-panel" data-panel="marketplace">×</button>
     </div>
     <div class="panel-body">
+      <p class="panel-desc">Buy, sell and trade scanned 3D hologram NFTs. List your own creations or collect unique digital twins of real objects.</p>
+
       <div class="market-tabs">
-        <button class="tab-btn active" data-tab="browse">Browse</button>
+        <button class="tab-btn active" data-tab="browse">Browse All</button>
         <button class="tab-btn" data-tab="mylistings">My Listings</button>
+        <button class="tab-btn" data-tab="activity">Activity</button>
       </div>
 
       <div id="browse-tab" class="tab-content">
+        <div class="filter-row">
+          <select id="market-filter">
+            <option value="all">All Categories</option>
+            <option value="object">Everyday Objects</option>
+            <option value="art">Art</option>
+            <option value="collectible">Collectibles</option>
+          </select>
+          <select id="market-sort">
+            <option value="recent">Most Recent</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+          </select>
+        </div>
         <div id="market-list" class="card-list">
-          <!-- Populated by JS -->
+          <!-- Populated by JS with demo listings including Duck -->
         </div>
       </div>
 
       <div id="mylistings-tab" class="tab-content hidden">
         <div id="my-listings" class="card-list">
-          <div class="empty-state"><p>No active listings</p></div>
+          <div class="empty-state"><p>No active listings yet. Mint something and list it here.</p></div>
         </div>
-        <button id="btn-list-current" class="btn btn-secondary full" disabled>List Current Model</button>
+        <button id="btn-list-current" class="btn btn-secondary full" disabled>List Current Model for Sale</button>
+      </div>
+
+      <div id="activity-tab" class="tab-content hidden">
+        <div id="activity-list" class="card-list">
+          <div class="activity-item"><span class="dot"></span><p>Demo Duck hologram listed at 0.08 MATIC</p><time>just now</time></div>
+          <div class="activity-item"><span class="dot"></span><p>New scan uploaded to IPFS</p><time>2 min ago</time></div>
+          <div class="activity-item"><span class="dot"></span><p>Marketplace opened</p><time>5 min ago</time></div>
+        </div>
       </div>
     </div>
   </aside>
+
+  <!-- ABOUT / HOW IT WORKS PANEL (right, wider feel) -->
+  <aside id="about-panel" class="side-panel right wide hidden">
+    <div class="panel-header">
+      <h2>About VR 3D NFT Scanner</h2>
+      <button class="close-panel" data-panel="about">×</button>
+    </div>
+    <div class="panel-body scrollable">
+      <section class="about-section">
+        <h3>What is this?</h3>
+        <p>A pure-frontend WebXR experience that lets anyone scan a real-world 3D object (via phone apps like Polycam or Scaniverse), turn the scan into a floating holographic digital twin, mint it as an ERC-721 NFT on Polygon, place it in true augmented reality on any surface, explore it in VR headsets, and buy / sell / trade it on a built-in marketplace.</p>
+      </section>
+
+      <section class="about-section">
+        <h3>The Duck Sample</h3>
+        <p>The classic Khronos Duck model floats in the center of the gallery as a reference hologram. It demonstrates the exact visual style — gentle floating motion, soft emissive materials, platform glow, and AR placement behavior — that every scanned object receives.</p>
+      </section>
+
+      <section class="about-section">
+        <h3>How the pipeline works</h3>
+        <ol class="pipeline-list">
+          <li><strong>Capture</strong> – Use any photogrammetry app that exports GLB (Polycam, Scaniverse, RealityScan, etc.).</li>
+          <li><strong>Upload</strong> – Drop the file here. We normalize scale, add holographic materials, and prepare it for AR/VR.</li>
+          <li><strong>Describe</strong> – Name it and optionally generate a rich AI description.</li>
+          <li><strong>Pin to IPFS</strong> – Model + JSON metadata are pinned (Pinata when keys are set, otherwise demo mode).</li>
+          <li><strong>Mint</strong> – Call the VRHologramNFT smart contract on Polygon Amoy (or mainnet).</li>
+          <li><strong>Experience</strong> – Enter AR to place the hologram on real tables, floors, walls. Enter VR for immersive inspection.</li>
+          <li><strong>Trade</strong> – List on the marketplace, buy other creators’ scans, build a collection of real-world digital twins.</li>
+        </ol>
+      </section>
+
+      <section class="about-section">
+        <h3>Tech stack</h3>
+        <ul class="tech-list">
+          <li>Three.js + WebXR (AR hit-testing + VR controllers)</li>
+          <li>ethers.js for wallet & contract interaction</li>
+          <li>IPFS via Pinata</li>
+          <li>OpenZeppelin-style ERC-721 (VRHologramNFT.sol)</li>
+          <li>Pure static frontend – deploys on GitHub Pages</li>
+        </ul>
+      </section>
+
+      <section class="about-section">
+        <h3>Making it fully live</h3>
+        <ol>
+          <li>Get free Pinata API keys and paste into <code>js/config.js</code></li>
+          <li>Deploy <code>contracts/VRHologramNFT.sol</code> on Remix (Polygon Amoy)</li>
+          <li>Paste the contract address into config</li>
+          <li>Reload and mint for real on-chain NFTs</li>
+        </ol>
+      </section>
+
+      <section class="about-section">
+        <h3>FAQ</h3>
+        <details>
+          <summary>Do I need a headset?</summary>
+          <p>No. AR works on many Android phones and some iOS browsers that support WebXR. VR works with Quest, Vision Pro (via browser), and other WebXR headsets. Desktop still lets you orbit and inspect the holograms.</p>
+        </details>
+        <details>
+          <summary>What file formats are supported?</summary>
+          <p>GLB (preferred) and glTF. Most modern scan apps export these directly.</p>
+        </details>
+        <details>
+          <summary>Is this real on-chain minting?</summary>
+          <p>Yes when you add your own Pinata keys and deploy the included contract. Without keys the app runs in full demo mode so you can still experience the entire flow.</p>
+        </details>
+        <details>
+          <summary>Can I sell the NFTs elsewhere?</summary>
+          <p>Yes. Once minted the tokenURI points to IPFS metadata that includes the 3D model. Compatible marketplaces and wallets that understand 3D NFTs can display them.</p>
+        </details>
+        <details>
+          <summary>Why does the Duck look special?</summary>
+          <p>It is the canonical sample that every new scan is styled after — floating animation, soft glow, platform, AR reticle placement. That is the “duck version” visual language of this app.</p>
+        </details>
+      </section>
+
+      <section class="about-section">
+        <h3>Roadmap ideas</h3>
+        <ul>
+          <li>Direct browser-based scanning (MediaPipe / WebGPU depth)</li>
+          <li>Gaussian splat support alongside GLB</li>
+          <li>Royalty-enabled secondary sales</li>
+          <li>Multi-chain (Base, Arbitrum, Solana via adapters)</li>
+          <li>Social feed of recent scans</li>
+        </ul>
+      </section>
+
+      <p class="footer-note">Built as an open prototype. Scan the real world. Own the digital twin. Trade the hologram.</p>
+    </div>
+  </aside>
+
+  <!-- Scan Guide Modal -->
+  <div id="scan-guide-modal" class="modal hidden">
+    <div class="modal-content">
+      <button class="modal-close" id="close-scan-guide">×</button>
+      <h2>Complete Scanning Guide</h2>
+      <div class="modal-body">
+        <h3>Recommended apps</h3>
+        <ul>
+          <li><strong>Polycam</strong> (iOS / Android) – excellent quality, easy export</li>
+          <li><strong>Scaniverse</strong> (iOS / Android) – fast, good for objects</li>
+          <li><strong>RealityScan</strong> (Epic) – high fidelity</li>
+          <li><strong>Kiri Engine</strong> – photogrammetry alternative</li>
+        </ul>
+        <h3>Lighting & setup</h3>
+        <p>Diffuse daylight or soft indoor light works best. Avoid harsh shadows and specular highlights. Place the object on a contrasting but non-patterned surface.</p>
+        <h3>Motion path</h3>
+        <p>Move in a slow circle, then higher and lower arcs. Overlap frames. Keep the object fully in frame. For complex shapes do a second pass from another angle.</p>
+        <h3>Export settings</h3>
+        <p>Choose GLB. Include textures if available. Aim for under 20–25 MB for comfortable mobile AR. You can always simplify later in Blender if needed.</p>
+        <h3>After export</h3>
+        <p>Return here, switch to Upload, drop the file, give it a memorable name, hit AI Generate for a rich description, upload to IPFS, and mint.</p>
+      </div>
+    </div>
+  </div>
 
   <!-- Bottom XR Controls -->
   <div id="bottom-bar">
     <div class="stats">
       <span id="objects-count">1 Hologram</span>
       <span id="xr-mode-label">Web</span>
+      <span id="fps-label" class="muted">60 fps</span>
     </div>
     <div class="xr-buttons">
-      <button id="btn-enter-ar" class="btn btn-ar">Enter AR</button>
-      <button id="btn-enter-vr" class="btn btn-vr">Enter VR</button>
+      <button id="btn-enter-ar" class="btn btn-ar" title="Requires WebXR AR capable device">Enter AR</button>
+      <button id="btn-enter-vr" class="btn btn-vr" title="Requires WebXR VR headset">Enter VR</button>
     </div>
+    <p class="xr-hint">Point at a surface in AR and tap to place the hologram • Grab with controllers in VR</p>
   </div>
 
   <div id="toast-container"></div>
