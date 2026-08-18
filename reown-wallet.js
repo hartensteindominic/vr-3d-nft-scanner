@@ -1,40 +1,12 @@
-/* HyperStream 3D · MetaMask Connect
- * Quest = display, iPhone = scanner.
- * Quest/desktop without extension -> MetaMask QR shown on the headset; scan THIS screen with the phone.
- * iPhone Safari/Chrome -> MetaMask Mobile deeplink + relay.
- * MetaMask in-app browser/extension -> direct provider.
- */
-let evmClient=null;
+/* HyperStream 3D - Quest-first direct MetaMask connector */
+const SEPOLIA={chainId:'0xaa36a7',chainName:'Sepolia',nativeCurrency:{name:'Sepolia Ether',symbol:'ETH',decimals:18},rpcUrls:['https://rpc.sepolia.org'],blockExplorerUrls:['https://sepolia.etherscan.io']};
 const $=id=>document.getElementById(id);
-const isQuest=/Oculus|Quest|Meta Quest/i.test(navigator.userAgent);
-function status(t,e=false){const x=$('status');if(x){x.textContent=t;x.className='status'+(e?' error':'')}const w=$('walletStatus');if(w){w.textContent=t;w.className='walletstatus'+(e?' error':'')}}
-function setConnected(button,address,provider){window.walletProvider=provider;window.walletAddress=address;window.hyperstreamSetWallet?.(address);if(button){button.disabled=false;button.textContent='🟢 WALLET CONNECTED'}status('🟢 MetaMask connected ✓')}
-async function getClient(){
- if(evmClient)return evmClient;
- status('Loading MetaMask Connect…');
- const mod=await import('https://esm.sh/@metamask/connect-evm@2.1.1?bundle');
- const createEVMClient=mod.createEVMClient;
- if(typeof createEVMClient!=='function')throw Error('MetaMask Connect could not load.');
- const rpc='https://rpc.sepolia.org';
- evmClient=await createEVMClient({
-   dapp:{name:'HyperStream 3D NFT Studio',url:'https://hartensteindominic.github.io/vr-3d-nft-scanner/'},
-   analytics:{enabled:false},
-   ui:{showInstallModal:false},
-   supportedNetworks:[{chainId:'0xaa36a7',chainName:'Sepolia',rpcUrls:[rpc],nativeCurrency:{name:'Sepolia Ether',symbol:'ETH',decimals:18},blockExplorerUrls:['https://sepolia.etherscan.io']}],
-   api:{}
- });
- return evmClient;
-}
-async function connectWallet(){
- const button=$('connectWalletBtn');if(button){button.disabled=true;button.textContent='⏳ CONNECTING…'}
- try{
-  const client=await getClient();
-  if(isQuest)status('📱 QUEST DETECTED\nMetaMask QR will appear on this headset screen.\nUse your iPhone MetaMask app → Scan → point the phone camera at THIS screen.\n\nThe Quest does not scan the QR. Your phone does.');else status('🦊 Opening MetaMask…');
-  const result=await client.connect({chainIds:['0xaa36a7']});
-  const address=result?.accounts?.[0];if(!address)throw Error('MetaMask did not return an account.');
-  const provider=client.getProvider();if(!provider)throw Error('MetaMask connected but no provider was returned.');
-  window.walletClient=client;window.walletSession=result;setConnected(button,address,provider);
- }catch(e){console.error('HyperStream MetaMask connection error:',e);status('Wallet connection failed.\n'+(e?.message||String(e)),true);if(button){button.disabled=false;button.textContent='🦊 CONNECT WALLET'}}
-}
-window.walletClient=null;window.walletProvider=null;window.walletSession=null;window.walletAddress=null;window.reownConnect=connectWallet;
-window.addEventListener('DOMContentLoaded',()=>{const button=$('connectWalletBtn');if(button){button.type='button';button.addEventListener('click',connectWallet,{once:true})}});
+function status(t,e=false){const s=$('status');if(s){s.textContent=t;s.className='status'+(e?' error':'')}const w=$('walletStatus');if(w){w.textContent=t;w.className='walletstatus'+(e?' error':'')}}
+function short(a){return a?`${a.slice(0,8)}...${a.slice(-6)}`:''}
+async function ensureSepolia(p){const c=await p.request({method:'eth_chainId'});if(String(c).toLowerCase()===SEPOLIA.chainId)return;try{await p.request({method:'wallet_switchEthereumChain',params:[{chainId:SEPOLIA.chainId}]})}catch(e){if(e?.code!==4902)throw e;await p.request({method:'wallet_addEthereumChain',params:[SEPOLIA]})}const a=await p.request({method:'eth_chainId'});if(String(a).toLowerCase()!==SEPOLIA.chainId)throw Error('Please switch MetaMask to Sepolia and try again.')}
+function setConnected(b,a,p){window.walletProvider=p;window.walletAddress=a;window.hyperstreamSetWallet?.(a);if(b){b.disabled=false;b.textContent='WALLET CONNECTED'}status(`MetaMask connected\n${short(a)}\nSepolia`)}
+async function connectWallet(){const b=$('connectWalletBtn');if(b){b.disabled=true;b.textContent='CONNECTING...'}try{const p=window.ethereum;if(!p)throw Error("MetaMask was not detected. On Quest, use a browser that exposes the MetaMask wallet provider.");status('MetaMask detected. Requesting wallet...');const ac=await p.request({method:'eth_requestAccounts'});const a=ac?.[0];if(!a)throw Error('MetaMask returned no wallet account.');status('Wallet connected. Checking network...');await ensureSepolia(p);window.walletProvider=p;window.walletAddress=a;window.walletSession={accounts:[a],chainId:SEPOLIA.chainId};window.walletClient=p;setConnected(b,a,p);p.on?.('accountsChanged',accountsChanged);p.on?.('chainChanged',chainChanged)}catch(e){console.error(e);status('Wallet connection failed.\n'+(e?.message||String(e)),true);if(b){b.disabled=false;b.textContent='CONNECT WALLET'}}}
+function accountsChanged(a){if(!a?.length){window.walletAddress=null;window.walletProvider=null;window.walletSession=null;if($('wallet'))$('wallet').textContent='';if($('walletStatus'))$('walletStatus').textContent='Wallet disconnected';return}window.walletAddress=a[0];window.hyperstreamSetWallet?.(a[0]);status(`MetaMask account changed\n${short(a[0])}`)}
+function chainChanged(c){if(String(c).toLowerCase()===SEPOLIA.chainId)status('MetaMask connected\nSepolia');else status('MetaMask is connected, but the network is not Sepolia. Switch to Sepolia before minting.',true)}
+window.walletClient=null;window.walletProvider=null;window.walletSession=null;window.walletAddress=null;window.reownConnect=connectWallet;window.connectWallet=connectWallet;
+window.addEventListener('DOMContentLoaded',()=>{const b=$('connectWalletBtn');if(!b)return;b.type='button';b.addEventListener('click',connectWallet)});
