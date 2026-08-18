@@ -19,66 +19,44 @@ const modal = createAppKit({
   projectId,
   metadata: {
     name: 'HyperStream 3D NFT Studio',
-    description: 'HyperStream 3D NFT Studio',
-    url: 'https://hartensteindominic.github.io',
+    description: 'Connect MetaMask on your phone by scanning the QR code.',
+    url: 'https://hartensteindominic.github.io/vr-3d-nft-scanner/',
     icons: []
   },
   features: { analytics: false, email: false, socials: [] }
 });
 
-function showWallet(address) {
-  const el = document.getElementById('wallet');
-  const status = document.getElementById('status');
-  if (address) {
-    el.textContent = ' ' + address.slice(0, 8) + '…' + address.slice(-6);
-    status.textContent = '🦊 Wallet connected ✓';
-    status.className = 'status';
-  }
-}
-
-async function connectReown() {
-  const btn = document.getElementById('walletBtn');
-  btn.disabled = true;
-  try {
-    document.getElementById('status').textContent = 'Opening secure wallet connection…';
-    modal.open({ view: 'Connect', namespace: 'eip155' });
-  } catch (e) {
-    console.error(e);
-    document.getElementById('status').textContent = 'Wallet connection failed.\n' + (e.message || e);
-    document.getElementById('status').className = 'status error';
-  } finally {
-    btn.disabled = false;
-  }
-}
-
 function syncWallet() {
   try {
     const connected = modal.getIsConnected();
     const address = modal.getAddress();
-    if (connected && address) showWallet(address);
-  } catch (e) { console.debug('Reown wallet state not ready', e); }
+    if (connected && address) {
+      window.walletProvider = modal.getWalletProvider?.() || null;
+      window.hyperstreamSetWallet?.(address);
+    }
+  } catch (e) { console.debug('Wallet state not ready', e); }
+}
+
+async function connectReown() {
+  document.getElementById('qrWrap').hidden = false;
+  document.getElementById('status').textContent = 'Scan the QR with MetaMask on your phone…';
+  modal.open({ view: 'Connect', namespace: 'eip155' });
 }
 
 modal.subscribeProvider(({ provider, address, isConnected, error }) => {
   if (error) {
-    console.error(error);
+    document.getElementById('status').textContent = 'Wallet connection error. Try scanning the QR again.';
+    document.getElementById('status').className = 'status error';
     return;
   }
   if (isConnected && provider && address) {
     window.walletProvider = provider;
-    showWallet(address);
+    window.hyperstreamSetWallet?.(address);
   }
 });
 
 modal.subscribeEvents(() => syncWallet());
-
 window.reownModal = modal;
 window.reownConnect = connectReown;
-
-window.addEventListener('load', () => {
-  const btn = document.getElementById('walletBtn');
-  if (btn) btn.onclick = connectReown;
-  syncWallet();
-});
-
+window.addEventListener('load', syncWallet);
 setTimeout(syncWallet, 1500);
