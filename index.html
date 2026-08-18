@@ -1,1 +1,56 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="HyperStream browser 3D scanner, GLB exporter and NFT marketplace studio"><title>HyperStream • 3D Scanner + NFT Studio</title><link rel="stylesheet" href="styles.css"></head><body><header class="topbar"><div class="brand"><span class="brand-orb">✦</span><div><strong>HYPERSTREAM</strong><small>3D SCANNER · NFT STUDIO</small></div></div><div class="mode"><span id="market-mode-badge" class="badge demo">Demo</span><span id="wallet-status">Offline wallet</span></div></header><main class="shell"><section class="hero"><div><p class="eyebrow">RGB → VOLUME → GLB → NFT</p><h1>Turn a camera scan into a collectible.</h1><p class="sub">Browser-first 3D studio with estimated depth, voxel-style reconstruction, GLB export and a persistent marketplace.</p></div><div class="pipeline"><span>SCAN</span><i>→</i><span>FUSE</span><i>→</i><span>MESH</span><i>→</i><span>GLB</span><i>→</i><span>NFT</span></div></section><section class="workspace"><div class="stage-panel panel"><div class="panel-head"><div><span class="eyebrow">HOLOGRAM STAGE</span><h2 id="model-name">HyperScan Genesis</h2></div><span id="scan-state" class="status">READY</span></div><div id="stage" class="stage"><div class="scan-grid"></div><div id="stage-hint" class="stage-hint">Start the camera or generate a voxel preview</div></div><div class="stage-controls"><button id="start-camera" class="primary">◎ Start Camera</button><button id="stop-camera">Stop</button><button id="generate-preview">◇ Voxel Preview</button><button id="export-glb">↓ Export GLB</button></div><video id="camera-video" playsinline muted hidden></video><div class="scan-stats"><div><b id="frame-count">0</b><span>frames</span></div><div><b id="voxel-count">0</b><span>voxels</span></div><div><b id="confidence">0%</b><span>confidence</span></div><div><b id="mesh-tris">0</b><span>triangles</span></div></div></div><aside class="control-panel panel"><div class="panel-head"><div><span class="eyebrow">CAPTURE</span><h2>Scanner controls</h2></div></div><label>Detail <input id="detail" type="range" min="8" max="36" value="20"><span id="detail-value">20</span></label><label>Fusion confidence <input id="fusion" type="range" min="10" max="100" value="72"><span id="fusion-value">72%</span></label><label>Model name <input id="name-input" type="text" value="HyperScan Genesis" maxlength="80"></label><label>Category <select id="category"><option>Hologram</option><option>Voxel</option><option>Artifact</option><option>Creature</option><option>Environment</option></select></label><button id="apply-settings" class="wide">Apply to model</button><div class="notice"><strong>RGB-only mode</strong><p>Depth is estimated from image luminance. This is a reconstruction preview, not a hardware depth scan.</p></div><div class="export-box"><span>OUTPUT</span><strong>GLB / glTF 2.0</strong><small>Binary model ready for IPFS upload.</small></div></aside></section><section class="market panel"><div class="market-head"><div><span class="eyebrow">HYPERSTREAM MARKET</span><h2>Collect, list, trade</h2></div><button id="list-model" class="primary">＋ List Current Model</button></div><nav class="tabs"><button class="tab active" data-tab="browse">Browse</button><button class="tab" data-tab="listings">My Listings</button><button class="tab" data-tab="activity">Activity</button><button class="tab" data-tab="library">My Library</button></nav><div id="browse-tools" class="market-tools"><input id="market-search" type="search" placeholder="Search collectibles…"><select id="market-category"><option value="all">All categories</option><option>Hologram</option><option>Voxel</option><option>Artifact</option><option>Creature</option><option>Environment</option></select><select id="market-sort"><option value="newest">Newest</option><option value="price-low">Price: low</option><option value="price-high">Price: high</option><option value="name">Name A–Z</option></select><span id="listing-count" class="count">0 items</span></div><div id="market-list" class="market-grid"></div><div id="market-empty" class="empty" hidden></div></section></main><dialog id="list-dialog"><form method="dialog" id="list-form"><button class="dialog-x" value="cancel">×</button><p class="eyebrow">CREATE LISTING</p><h2>Put your scan on the market</h2><label>Price (MATIC)<input id="list-price" type="number" min="0.001" step="0.001" value="0.10" required></label><p class="dialog-note">Demo mode records the listing locally. No blockchain transaction is claimed.</p><div class="dialog-actions"><button value="cancel">Cancel</button><button id="confirm-list" class="primary" value="default">List item</button></div></form></dialog><script type="module" src="js/app.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#03030a">
+<title>HYPERSTREAM // QUANTUM SCAN</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="noise"></div>
+<header class="topbar">
+  <div class="brand"><div class="logo-ring"><span>H</span></div><div><b>HYPERSTREAM</b><small>QUANTUM CAPTURE ENGINE</small></div></div>
+  <div class="top-status"><span class="pulse"></span><span id="connection">SYSTEM READY</span><span id="market-mode-badge" class="badge demo">DEMO</span></div>
+</header>
+<main>
+<section class="hero">
+  <div><div class="kicker">// RGB → ESTIMATED DEPTH → VOLUMETRIC FUSION</div><h1>SCAN REALITY.<br><em>MAKE IT 3D.</em></h1><p>Point the camera at an object. HyperStream captures a moving RGB sequence, estimates depth from image structure and builds a living volumetric preview you can export as GLB.</p></div>
+  <div class="pipeline"><span>01 CAMERA</span><i>›</i><span>02 FUSE</span><i>›</i><span>03 VOLUME</span><i>›</i><span>04 GLB</span></div>
+</section>
+<section class="scanner-shell">
+  <div class="scanner panel">
+    <div class="scanner-top"><div><span class="kicker">LIVE CAPTURE / <span id="camera-side">REAR</span></span><h2 id="model-name">QUANTUM OBJECT 01</h2></div><div class="scan-state"><span id="scan-state">STANDBY</span><b id="scan-time">00:00</b></div></div>
+    <div id="stage" class="stage">
+      <video id="camera-video" playsinline muted></video>
+      <canvas id="scan-canvas"></canvas>
+      <div class="hud"><div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div><div class="reticle"><span></span></div><div class="hud-label top-left">HYPERSTREAM / OPTICAL FIELD</div><div class="hud-label top-right" id="camera-label">REAR CAMERA</div><div class="hud-label bottom-left">DEPTH: ESTIMATED · RGB</div><div class="hud-label bottom-right" id="fps">0 FPS</div></div>
+      <div id="stage-message" class="stage-message"><div class="big-orb">◎</div><b>CAMERA OFFLINE</b><span>Allow camera access, then move slowly around your subject.</span></div>
+    </div>
+    <div class="capture-bar">
+      <button id="start-camera" class="action primary"><span>◉</span> START SCAN</button><button id="stop-camera" class="action">STOP</button><button id="flip-camera" class="action">↻ FLIP CAMERA</button><button id="generate-preview" class="action">◇ PREVIEW</button><button id="export-glb" class="action export">↓ GLB</button>
+    </div>
+    <div class="stats"><div><b id="frame-count">0</b><span>FRAMES</span></div><div><b id="voxel-count">0</b><span>POINTS</span></div><div><b id="confidence">0%</b><span>CONFIDENCE</span></div><div><b id="mesh-tris">0</b><span>TRIANGLES</span></div><div><b id="scan-resolution">--</b><span>CAMERA</span></div></div>
+  </div>
+  <aside class="side panel">
+    <div class="side-head"><span class="kicker">CAPTURE MATRIX</span><h2>Scanner Core</h2></div>
+    <div class="control"><label>VOLUME DETAIL <output id="detail-value">24</output></label><input id="detail" type="range" min="12" max="42" value="24"></div>
+    <div class="control"><label>FUSION CONFIDENCE <output id="fusion-value">72%</output></label><input id="fusion" type="range" min="20" max="100" value="72"></div>
+    <div class="field"><label>OBJECT NAME</label><input id="name-input" value="Quantum Object 01" maxlength="80"></div>
+    <div class="field"><label>CATEGORY</label><select id="category"><option>Hologram</option><option>Artifact</option><option>Creature</option><option>Voxel</option><option>Environment</option></select></div>
+    <button id="apply-settings" class="apply">UPDATE MODEL</button>
+    <div class="telemetry"><div><span>CAPTURE</span><b id="capture-mode">RGB MONOCULAR</b></div><div><span>FUSION</span><b>SPARSE VOLUME</b></div><div><span>OUTPUT</span><b>GLB / glTF 2.0</b></div></div>
+    <div class="warning"><b>DEPTH NOTICE</b><p>This device supplies RGB video. Depth is estimated, not LiDAR. Move around the subject for better multi-view reconstruction.</p></div>
+  </aside>
+</section>
+<section class="market panel">
+  <div class="market-head"><div><span class="kicker">HYPERSTREAM EXCHANGE</span><h2>Digital Matter Market</h2></div><button id="list-model" class="action primary">＋ LIST CURRENT MODEL</button></div>
+  <nav class="tabs"><button class="tab active" data-tab="browse">BROWSE</button><button class="tab" data-tab="listings">MY LISTINGS</button><button class="tab" data-tab="activity">ACTIVITY</button><button class="tab" data-tab="library">MY LIBRARY</button></nav>
+  <div id="browse-tools" class="market-tools"><input id="market-search" type="search" placeholder="Search digital matter…"><select id="market-category"><option value="all">ALL CATEGORIES</option><option>Hologram</option><option>Voxel</option><option>Artifact</option><option>Creature</option><option>Environment</option></select><select id="market-sort"><option value="newest">NEWEST</option><option value="price-low">LOW PRICE</option><option value="price-high">HIGH PRICE</option><option value="name">NAME A–Z</option></select><span id="listing-count">0 ITEMS</span></div>
+  <div id="market-list" class="market-grid"></div><div id="market-empty" class="empty" hidden></div>
+</section>
+</main>
+<dialog id="list-dialog"><form method="dialog" id="list-form"><button class="dialog-x" value="cancel">×</button><span class="kicker">CREATE LISTING</span><h2>Transmit to Exchange</h2><label>PRICE / MATIC<input id="list-price" type="number" min="0.001" step="0.001" value="0.10" required></label><p>Demo mode stores this locally. No blockchain transaction is claimed.</p><div class="dialog-actions"><button value="cancel">CANCEL</button><button id="confirm-list" class="primary" value="default">LIST MODEL</button></div></form></dialog>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
