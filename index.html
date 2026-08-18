@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VR 3D NFT Scanner – Hologram Gallery</title>
+  <title>VR 3D NFT Scanner – AR + VR Holograms</title>
   <link rel="stylesheet" href="css/style.css" />
   <script type="importmap">
   {
@@ -16,21 +16,19 @@
   </script>
 </head>
 <body>
-  <!-- Immersive full-screen viewport -->
   <div id="viewport-container">
     <div id="loading-overlay">
       <div class="spinner"></div>
-      <p>Loading hologram gallery...</p>
+      <p>Loading AR / VR hologram engine...</p>
     </div>
   </div>
 
-  <!-- Elegant floating top bar -->
   <header id="top-bar">
     <div class="logo">
       <span class="logo-icon">◈</span>
       <div>
         <h1>VR 3D NFT Scanner</h1>
-        <p class="tagline">Scan → Hologram → NFT</p>
+        <p class="tagline">Scan → Hologram → AR / VR → NFT</p>
       </div>
     </div>
     <div class="top-actions">
@@ -42,7 +40,6 @@
     </div>
   </header>
 
-  <!-- Left floating panel – Scan / Upload -->
   <aside id="left-panel" class="floating-panel">
     <div class="panel-header">
       <h2>Capture</h2>
@@ -57,7 +54,7 @@
       <div id="guided-scan" class="mode-content">
         <ol class="steps">
           <li>Place object in good light</li>
-          <li>Circle slowly 2–3 times (Polycam / Scaniverse)</li>
+          <li>Circle slowly with Polycam / Scaniverse</li>
           <li>Export as <strong>GLB</strong></li>
         </ol>
         <button id="btn-start-scan-guide" class="btn btn-secondary full">Start Guide</button>
@@ -79,7 +76,6 @@
     </div>
   </aside>
 
-  <!-- Right floating panel – Mint + Collection -->
   <aside id="right-panel" class="floating-panel">
     <div class="panel-header">
       <h2>Mint NFT</h2>
@@ -100,7 +96,6 @@
       <div id="mint-status" class="status-box hidden"></div>
 
       <div class="divider"></div>
-
       <h3>My Collection</h3>
       <div id="collection-list" class="collection-list">
         <p class="empty">Connect wallet to view</p>
@@ -108,15 +103,19 @@
     </div>
   </aside>
 
-  <!-- Bottom center controls -->
+  <!-- Bottom controls with both AR and VR -->
   <div id="bottom-bar">
     <div class="stats">
       <span id="objects-count">1 Hologram</span>
+      <span id="xr-mode-label">Web</span>
     </div>
-    <button id="btn-enter-vr" class="btn btn-vr">Enter VR</button>
+    <div class="xr-buttons">
+      <button id="btn-enter-ar" class="btn btn-ar">Enter AR</button>
+      <button id="btn-enter-vr" class="btn btn-vr">Enter VR</button>
+    </div>
+    <p class="ar-hint">AR works best on Android Chrome / Quest browser</p>
   </div>
 
-  <!-- Toast -->
   <div id="toast-container"></div>
 
   <script type="module" src="js/app.js"></script>
