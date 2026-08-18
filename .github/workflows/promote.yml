@@ -1,0 +1,45 @@
+name: HyperStream Auto-Promote Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  social-post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build release announcement
+        id: announcement
+        env:
+          RELEASE_NAME: ${{ github.event.release.name }}
+          RELEASE_URL: ${{ github.event.release.html_url }}
+          APP_URL: https://hartensteindominic.github.io/vr-3d-nft-scanner/
+        run: |
+          python - <<'PY'
+          import os
+          text = f"🚀 HyperStream just shipped: {os.environ.get('RELEASE_NAME') or 'a new release'}\n\nCreate, mint, and share interactive 3D NFTs from the browser. 🧊⛓️🥽\n\nTry it: {os.environ['APP_URL']}\nRelease: {os.environ['RELEASE_URL']}"
+          print(text)
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as f:
+              f.write('text<<EOF\n' + text + '\nEOF\n')
+          PY
+
+      - name: Post to Bluesky when credentials are configured
+        if: ${{ secrets.BLUESKY_IDENTIFIER != '' && secrets.BLUESKY_PASSWORD != '' }}
+        uses: myConsciousness/bluesky-post@v6
+        with:
+          text: ${{ steps.announcement.outputs.text }}
+          identifier: ${{ secrets.BLUESKY_IDENTIFIER }}
+          password: ${{ secrets.BLUESKY_PASSWORD }}
+
+      - name: Report promotion status
+        env:
+          BLUESKY_CONFIGURED: ${{ secrets.BLUESKY_IDENTIFIER != '' && secrets.BLUESKY_PASSWORD != '' }}
+        run: |
+          if [ "$BLUESKY_CONFIGURED" = "true" ]; then
+            echo "✅ HyperStream release promotion sent to Bluesky."
+          else
+            echo "ℹ️ Bluesky secrets are not configured yet. Release announcement was generated successfully."
+          fi
