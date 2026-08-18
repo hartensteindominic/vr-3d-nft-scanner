@@ -1,1 +1,343 @@
-PLACEHOLDER_INDEX
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS NFT — Futuristic 3D Marketplace</title>
+    <meta name="description" content="NEXUS NFT — a futuristic 3D NFT marketplace with live auctions, on-chain Sepolia minting, staking, governance and a full Web3 portfolio.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌀</text></svg>">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- 3D + atmosphere layers -->
+    <canvas id="three-canvas"></canvas>
+    <div class="grid-overlay"></div>
+    <div class="scanline"></div>
+    <div id="cursor-glow"></div>
+
+    <!-- Live ticker -->
+    <div class="ticker-bar"><div class="ticker-track" id="tickerTrack"></div></div>
+
+    <div class="overlay">
+
+        <!-- ============ NAV ============ -->
+        <nav class="navbar">
+            <div class="logo" onclick="scrollToId('hero')">NEXUS<span>NFT</span></div>
+            <ul class="nav-links">
+                <li><a href="#explore">Explore</a></li>
+                <li><a href="#collections">Collections</a></li>
+                <li><a href="#auctions">Auctions</a></li>
+                <li><a href="#mint">Mint</a></li>
+                <li><a href="#staking">Staking</a></li>
+                <li><a href="#governance">DAO</a></li>
+                <li><a href="#activity">Activity</a></li>
+                <li><a href="#portfolio">Portfolio</a></li>
+            </ul>
+            <div class="nav-right">
+                <button class="search-trigger" id="searchTrigger">
+                    <span>⌕</span><span class="st-label">Search</span><kbd>Ctrl K</kbd>
+                </button>
+                <div class="network-badge" id="networkBadge" title="Click to switch to Sepolia">
+                    <span class="dot"></span><span id="networkLabel">Sepolia Testnet</span>
+                </div>
+                <button class="wallet-btn" id="walletBtn" onclick="document.getElementById('walletModal').classList.add('active')">
+                    <span class="dot"></span>
+                    <span id="walletStatus">Connect Wallet</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- ============ HERO ============ -->
+        <section class="hero" id="hero">
+            <div class="hero-badge"><span class="live-dot"></span> Live on Sepolia · Next-Gen NFT Platform</div>
+            <h1>Own the<br>Metaverse</h1>
+            <p>The most advanced 3D NFT marketplace — real on-chain minting, live auctions, staking rewards, DAO governance and a full portfolio dashboard. Built for the next generation of digital ownership.</p>
+            <div class="hero-actions">
+                <button class="btn btn-primary" onclick="scrollToId('explore')">Explore NFTs</button>
+                <button class="btn btn-accent" onclick="scrollToId('mint')">✨ Mint on Sepolia</button>
+                <button class="btn btn-outline" onclick="scrollToId('github')">Connect GitHub</button>
+            </div>
+            <div class="stats-bar glass">
+                <div class="stat-item"><div class="value" id="statVolume">$2.4B</div><div class="label">Total Volume</div></div>
+                <div class="stat-item"><div class="value" id="statNFTs">842K</div><div class="label">NFTs Minted</div></div>
+                <div class="stat-item"><div class="value" id="statUsers">1.2M</div><div class="label">Active Users</div></div>
+                <div class="stat-item"><div class="value" id="statFloor">Ξ 0.55</div><div class="label">Floor Price</div></div>
+            </div>
+            <div class="scroll-hint">▼ Scroll to explore</div>
+        </section>
+
+        <!-- ============ EXPLORE ============ -->
+        <section id="explore" class="section reveal">
+            <div class="section-title">
+                <h2>Explore the Marketplace</h2>
+                <p>Discover, collect and trade unique digital assets across every category</p>
+            </div>
+            <div class="toolbar">
+                <input type="text" id="exploreSearch" placeholder="⌕ Search NFTs, collections, creators…">
+                <select id="sortSelect">
+                    <option value="featured">Sort: Featured</option>
+                    <option value="price-asc">Price: Low → High</option>
+                    <option value="price-desc">Price: High → Low</option>
+                    <option value="rarity">Rarity</option>
+                    <option value="likes">Most Liked</option>
+                </select>
+            </div>
+            <div class="filter-tabs" id="filterTabs">
+                <button class="filter-tab active" data-filter="all">All</button>
+                <button class="filter-tab" data-filter="art">Art</button>
+                <button class="filter-tab" data-filter="collectibles">Collectibles</button>
+                <button class="filter-tab" data-filter="gaming">Gaming</button>
+                <button class="filter-tab" data-filter="music">Music</button>
+                <button class="filter-tab" data-filter="virtual-realestate">Virtual Real Estate</button>
+            </div>
+            <div class="nft-grid" id="nftGrid"></div>
+        </section>
+
+        <!-- ============ COLLECTIONS ============ -->
+        <section id="collections" class="section reveal">
+            <div class="section-title">
+                <h2>Top Collections</h2>
+                <p>Trending collections ranked by volume — click one to filter the marketplace</p>
+            </div>
+            <div class="collections-wrap" id="collectionsBody"></div>
+        </section>
+
+        <!-- ============ AUCTIONS ============ -->
+        <section id="auctions" class="section reveal">
+            <div class="section-title">
+                <h2>Live Auctions</h2>
+                <p>Bid on exclusive drops before time runs out</p>
+            </div>
+            <div class="auction-grid" id="auctionGrid"></div>
+        </section>
+
+        <!-- ============ MINT ============ -->
+        <section id="mint" class="section reveal">
+            <div class="section-title">
+                <h2>Mint Studio</h2>
+                <p>Mint NEXUS Genesis NFTs — a real transaction on Ethereum Sepolia</p>
+            </div>
+            <div class="mint-wrap">
+                <div class="mint-preview glass">
+                    <div class="holo">✨</div>
+                    <div style="font-weight:700;">NEXUS Genesis</div>
+                    <div style="font-size:0.72rem; color:var(--muted);">Only 10,000 will ever exist</div>
+                    <div style="font-size:0.68rem; color:var(--muted); font-family:var(--mono); word-break:break-all; text-align:center; padding:0 1rem;">
+                        Contract: <span style="color:var(--primary);" id="contractAddr">0x6ebd…1909b</span>
+                    </div>
+                </div>
+                <div class="mint-box glass">
+                    <div class="mode-switch">
+                        <button id="modeReal" class="active" onclick="setMintMode('real')">⛓️ Real Mint · Sepolia</button>
+                        <button id="modeDemo" onclick="setMintMode('demo')">🎮 Demo Mode</button>
+                    </div>
+                    <label style="font-size:0.72rem; color:var(--muted);">Quantity (max 10)</label>
+                    <input type="number" id="mintQty" value="1" min="1" max="10">
+                    <div class="mint-meta">
+                        Mint price: <b>0.0001 ETH</b> each<br>
+                        Gas: <b id="mintGas">—</b><br>
+                        Total: <b id="mintCostEth">—</b> (<span id="mintCostUsd">—</span>)
+                    </div>
+                    <button class="btn btn-primary" style="width:100%; margin-top:0.5rem;" onclick="mintNFT()">Mint NFT</button>
+                    <div style="margin-top:0.9rem; font-size:0.7rem; color:var(--muted);"><span id="mintProgress">6,842 / 10,000 minted</span></div>
+                    <div class="progress-bar"><div class="fill" id="mintProgressBar" style="width:68%;"></div></div>
+                    <p id="mintModeNote" style="font-size:0.66rem; color:var(--muted); margin-top:0.9rem; line-height:1.7;"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ ACTIVITY ============ -->
+        <section id="activity" class="section reveal">
+            <div class="section-title">
+                <h2>Live Activity</h2>
+                <p>Real-time feed of sales, bids, mints and transfers across the platform</p>
+            </div>
+            <div class="activity-wrap" id="activityFeed"></div>
+        </section>
+
+        <!-- ============ STAKING ============ -->
+        <section id="staking" class="section reveal">
+            <div class="section-title">
+                <h2>Staking Dashboard</h2>
+                <p>Stake your NFTs and earn passive rewards</p>
+            </div>
+            <div class="staking-dashboard">
+                <div class="stake-card glass">
+                    <div class="apy">18.5%</div>
+                    <p style="font-size:0.78rem; color:var(--muted);">Annual Percentage Yield</p>
+                    <div class="stake-input">
+                        <input type="number" id="stakeAmount" value="1" min="1" max="100">
+                        <button class="btn btn-primary" onclick="stakeNFT()">Stake</button>
+                    </div>
+                    <p style="font-size:0.68rem; color:var(--muted);">
+                        <span id="stakedCount">0</span> NFTs staked · Rewards: <span id="stakedRewards">0.00</span> ETH
+                    </p>
+                </div>
+                <div class="stake-card glass">
+                    <h3 style="margin-bottom:0.4rem;">📊 Reward Calculator</h3>
+                    <p style="font-size:0.78rem; color:var(--muted);">Estimate your staking rewards</p>
+                    <div class="stake-input">
+                        <input type="number" id="calcStake" value="10" min="1" max="1000">
+                    </div>
+                    <p style="font-family:var(--mono); font-size:1.05rem; color:var(--primary);">~<span id="calcReward">1.850</span> ETH/year</p>
+                    <p style="font-size:0.68rem; color:var(--muted);"><span id="calcDaily">0.005068</span> ETH/day</p>
+                </div>
+                <div class="stake-card glass">
+                    <h3 style="margin-bottom:0.4rem;">🔒 Your Stake</h3>
+                    <div style="font-family:var(--mono); font-size:1.4rem; color:var(--primary); margin:0.4rem 0;"><span id="yourStakedNFTs">0</span> NFTs</div>
+                    <p style="font-size:0.75rem; color:var(--muted);">Total Staked Value</p>
+                    <div style="font-family:var(--mono); font-size:1.15rem; font-weight:700; color:var(--accent);"><span id="yourStakeValue">0.00</span> ETH</div>
+                    <button class="btn btn-outline" style="margin-top:0.75rem;" onclick="unstakeNFT()">Unstake All</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ GOVERNANCE ============ -->
+        <section id="governance" class="section reveal">
+            <div class="section-title">
+                <h2>Governance</h2>
+                <p>Vote on protocol proposals and shape the future of NEXUS</p>
+            </div>
+            <div class="governance-list" id="governanceList"></div>
+        </section>
+
+        <!-- ============ LEADERBOARD ============ -->
+        <section id="leaderboard" class="section reveal">
+            <div class="section-title">
+                <h2>Top Traders</h2>
+                <p>The biggest movers on the platform this season</p>
+            </div>
+            <div class="leaderboard-wrap" id="leaderboardBody"></div>
+        </section>
+
+        <!-- ============ PORTFOLIO ============ -->
+        <section id="portfolio" class="section reveal">
+            <div class="section-title">
+                <h2>Your Portfolio</h2>
+                <p>Everything you own and every move you've made — saved locally in your browser</p>
+            </div>
+            <div class="portfolio-wrap">
+                <div class="portfolio-cards">
+                    <div class="p-card glass"><div class="p-value" id="pfValue">Ξ 0.00</div><div class="p-label">Collection Value</div></div>
+                    <div class="p-card glass"><div class="p-value" id="pfOwned">0</div><div class="p-label">NFTs Owned</div></div>
+                    <div class="p-card glass"><div class="p-value" id="pfStaked">0</div><div class="p-label">NFTs Staked</div></div>
+                    <div class="p-card glass"><div class="p-value" id="pfTxCount">0</div><div class="p-label">Transactions</div></div>
+                </div>
+                <p id="portfolioEmpty" style="text-align:center; color:var(--muted); font-size:0.85rem; padding:1.5rem;">Nothing here yet — mint or buy your first NFT to start your collection. ✨</p>
+                <div class="nft-grid" id="ownedGrid" style="padding:0 0 1.5rem;"></div>
+                <h3 style="margin:1rem 0 0.8rem; font-size:1rem;">Transaction History</h3>
+                <div class="glass" style="overflow-x:auto;">
+                    <table class="tx-table">
+                        <thead><tr><th>Type</th><th>Item</th><th>Amount</th><th>Tx</th><th>Time</th></tr></thead>
+                        <tbody id="txTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ GITHUB ============ -->
+        <section id="github" class="section reveal">
+            <div class="section-title">
+                <h2>GitHub Integration</h2>
+                <p>Showcase your developer identity next to your on-chain one</p>
+            </div>
+            <div class="github-wrap">
+                <div class="github-box glass">
+                    <div style="font-size:2rem; margin-bottom:0.4rem;">🐙</div>
+                    <p style="color:var(--muted); font-size:0.85rem;">Enter any GitHub username</p>
+                    <input type="text" id="githubUsername" placeholder="e.g. hartensteindominic" onkeydown="if(event.key==='Enter') connectGitHub()">
+                    <button class="btn btn-primary" style="width:100%; margin-top:0.6rem;" onclick="connectGitHub()">Connect GitHub</button>
+                    <div id="githubProfile"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ FOOTER ============ -->
+        <footer class="footer">
+            <p>NEXUS<span style="color:var(--primary);">NFT</span> © 2026 — Built for the future of digital ownership · Testnet only, never send mainnet funds</p>
+            <div class="f-links">
+                <a href="#explore">Marketplace</a><a href="#auctions">Auctions</a><a href="#mint">Mint</a><a href="#governance">DAO</a><a href="#github">GitHub</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ============ WALLET MODAL ============ -->
+    <div class="modal-overlay" id="walletModal">
+        <div class="modal">
+            <button class="close-btn" onclick="closeModal('walletModal')">&times;</button>
+            <h3>Connect Wallet</h3>
+            <div id="walletModalContent">
+                <p style="font-size:0.83rem; color:var(--muted);">Connect a Web3 wallet to mint on Sepolia, or explore with a demo wallet.</p>
+                <button class="wallet-option" onclick="connectReal()">
+                    <span class="w-icon">🦊</span>
+                    <span>MetaMask / Injected Wallet<small>Real EIP-1193 connection · Sepolia testnet</small></span>
+                </button>
+                <button class="wallet-option" onclick="connectDemo()">
+                    <span class="w-icon">🎮</span>
+                    <span>Demo Wallet<small>Simulated balance — explore every feature risk-free</small></span>
+                </button>
+            </div>
+            <div id="walletConnectedInfo" style="display:none;">
+                <div class="tx-detail"><span>Address</span><span id="walletAddress">—</span></div>
+                <div class="tx-detail"><span>Balance</span><span id="walletBalance">—</span></div>
+                <div class="tx-detail"><span>Network</span><span id="walletNetwork">—</span></div>
+                <div class="tx-detail"><span>Chain ID</span><span id="walletChainId">—</span></div>
+                <button class="btn btn-outline" style="width:100%; margin-top:0.9rem;" onclick="disconnectWallet()">Disconnect</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ NFT DETAIL MODAL ============ -->
+    <div class="modal-overlay" id="nftModal">
+        <div class="modal">
+            <button class="close-btn" onclick="closeModal('nftModal')">&times;</button>
+            <h3 id="detailName">NFT</h3>
+            <div id="detailContent"></div>
+            <button class="btn btn-primary" style="width:100%; margin-top:1rem;" onclick="buySelected()">Buy Now</button>
+        </div>
+    </div>
+
+    <!-- ============ BID MODAL ============ -->
+    <div class="modal-overlay" id="bidModal">
+        <div class="modal">
+            <button class="close-btn" onclick="closeModal('bidModal')">&times;</button>
+            <h3 id="bidName">Place Bid</h3>
+            <div id="bidInfo"></div>
+            <label style="font-size:0.72rem; color:var(--muted); display:block; margin-top:0.8rem;">Your bid (ETH)</label>
+            <input type="number" id="bidInput" step="0.01" min="0" style="width:100%; padding:0.7rem 1rem; border-radius:9px; border:1px solid var(--border); background:rgba(255,255,255,0.05); color:var(--text); font-family:var(--mono); margin-top:0.4rem; outline:none;">
+            <button class="btn btn-accent" style="width:100%; margin-top:0.9rem;" onclick="confirmBid()">Confirm Bid</button>
+        </div>
+    </div>
+
+    <!-- ============ TX STATUS MODAL ============ -->
+    <div class="modal-overlay" id="txModal">
+        <div class="modal">
+            <button class="close-btn" onclick="closeModal('txModal')">&times;</button>
+            <div id="txStatusBody"></div>
+        </div>
+    </div>
+
+    <!-- ============ COMMAND PALETTE ============ -->
+    <div class="modal-overlay cmdk" id="cmdk">
+        <div class="modal">
+            <input class="cmdk-input" id="cmdkInput" placeholder="Search NFTs, pages, actions…" autocomplete="off">
+            <div class="cmdk-results" id="cmdkResults"></div>
+            <div class="cmdk-hint">↑↓ navigate · ↵ select · esc close</div>
+        </div>
+    </div>
+
+    <!-- Toasts -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
+
+    <!-- App -->
+    <script src="js/data.js"></script>
+    <script src="js/three-bg.js"></script>
+    <script src="js/web3.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
