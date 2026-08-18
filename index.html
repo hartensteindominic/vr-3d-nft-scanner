@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ArtVerse | 3D Marketplace</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { overflow: hidden; background: #0a0a0a; font-family: 'Segoe UI', system-ui, sans-serif; color: white; }
+
+        #ui {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .top-bar {
+            pointer-events: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+        }
+
+        .logo { font-size: 28px; font-weight: 300; letter-spacing: 8px; }
+        .logo span { color: #c9a227; }
+
+        .vr-btn {
+            background: #c9a227;
+            color: black;
+            border: none;
+            padding: 12px 28px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+
+        .vr-btn:hover { background: #e0b83a; }
+
+        .info {
+            position: absolute;
+            bottom: 40px;
+            left: 40px;
+            max-width: 400px;
+            background: rgba(0,0,0,0.6);
+            padding: 24px;
+            border-left: 4px solid #c9a227;
+            backdrop-filter: blur(10px);
+        }
+
+        .info h2 { font-weight: 300; margin-bottom: 8px; }
+        .info p { opacity: 0.8; font-size: 14px; line-height: 1.6; }
+
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <div class="top-bar">
+            <div class="logo">ART<span>VERSE</span></div>
+            <button class="vr-btn" id="vrButton">ENTER VR</button>
+        </div>
+        <div class="info">
+            <h2>Welcome to the Gallery</h2>
+            <p>Walk around or click the golden portals to enter different rooms. Works on Meta Quest via WebXR.</p>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { VRButton } from 'three/addons/webxr/VRButton.js';
+        import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
+
+        let camera, scene, renderer;
+        let controllers = [];
+
+        init();
+        animate();
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x111111);
+            scene.fog = new THREE.Fog(0x111111, 10, 50);
+
+            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 1.6, 8);
+
+            // Lighting
+            const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+            scene.add(ambient);
+
+            const spot1 = new THREE.SpotLight(0xffffff, 80);
+            spot1.position.set(0, 8, 0);
+            spot1.angle = Math.PI / 4;
+            spot1.penumbra = 0.5;
+            scene.add(spot1);
+
+            // Floor
+            const floorGeo = new THREE.PlaneGeometry(40, 40);
+            const floorMat = new THREE.MeshStandardMaterial({ 
+                color: 0x1a1a1a, 
+                roughness: 0.8,
+                metalness: 0.2
+            });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            scene.add(floor);
+
+            // Central sculpture / logo
+            const torus = new THREE.Mesh(
+                new THREE.TorusKnotGeometry(1.2, 0.4, 128, 32),
+                new THREE.MeshStandardMaterial({ color: 0xc9a227, metalness: 0.9, roughness: 0.1 })
+            );
+            torus.position.y = 2;
+            scene.add(torus);
+
+            // Room Portals
+            createPortal(-8, 0, -6, "Classic Room", "room.html?type=classic");
+            createPortal( 8, 0, -6, "Modern Room", "room.html?type=modern");
+            createPortal( 0, 0, -12, "NFT Vault", "room.html?type=nft");
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.xr.enabled = true;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            document.body.appendChild(renderer.domElement);
+
+            // VR Button
+            document.getElementById('vrButton').addEventListener('click', () => {
+                renderer.xr.getSession() ? renderer.xr.getSession().end() : 
+                document.body.appendChild(VRButton.createButton(renderer));
+            });
+
+            // Controllers (for Quest)
+            const controllerModelFactory = new XRControllerModelFactory();
+            for (let i = 0; i < 2; i++) {
+                const controller = renderer.xr.getController(i);
+                scene.add(controller);
+                controllers.push(controller);
+
+                const grip = renderer.xr.getControllerGrip(i);
+                grip.add(controllerModelFactory.createControllerModel(grip));
+                scene.add(grip);
+            }
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function createPortal(x, y, z, name, url) {
+            const group = new THREE.Group();
+            group.position.set(x, 1.8, z);
+
+            const frame = new THREE.Mesh(
+                new THREE.BoxGeometry(3.2, 2.4, 0.15),
+                new THREE.MeshStandardMaterial({ color: 0xc9a227, metalness: 0.8 })
+            );
+            group.add(frame);
+
+            const inner = new THREE.Mesh(
+                new THREE.PlaneGeometry(2.8, 2),
+                new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide })
+            );
+            inner.position.z = 0.08;
+            group.add(inner);
+
+            // Clickable
+            group.userData = { url };
+            scene.add(group);
+
+            // Simple click (desktop)
+            renderer.domElement.addEventListener('click', (e) => {
+                const mouse = new THREE.Vector2(
+                    (e.clientX / window.innerWidth) * 2 - 1,
+                    -(e.clientY / window.innerHeight) * 2 + 1
+                );
+                const raycaster = new THREE.Raycaster();
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObject(group, true);
+                if (intersects.length > 0) window.location.href = url;
+            });
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            renderer.setAnimationLoop(() => {
+                renderer.render(scene, camera);
+            });
+        }
+      <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Gallery Room | ArtVerse</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { overflow: hidden; background: #000; font-family: system-ui; color: white; }
+        #back {
+            position: absolute; top: 20px; left: 20px; z-index: 20;
+            background: rgba(201,162,39,0.9); color: black; border: none;
+            padding: 10px 20px; cursor: pointer; font-weight: 600;
+        }
+        #info {
+            position: absolute; bottom: 30px; left: 30px; z-index: 20;
+            background: rgba(0,0,0,0.7); padding: 16px 24px; max-width: 360px;
+        }
+    </style>
+</head>
+<body>
+    <button id="back" onclick="location.href='index.html'">← BACK TO LOBBY</button>
+    <div id="info">
+        <h3 id="roomTitle">Classic Gallery</h3>
+        <p>Click artworks to view details. Works in VR on Meta Quest.</p>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { VRButton } from 'three/addons/webxr/VRButton.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        const params = new URLSearchParams(location.search);
+        const type = params.get('type') || 'classic';
+
+        const titles = {
+            classic: "Classic Masters Room",
+            modern: "Contemporary Room",
+            nft: "Digital / NFT Vault"
+        };
+        document.getElementById('roomTitle').textContent = titles[type];
+
+        let camera, scene, renderer, controls;
+
+        init();
+        animate();
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0d0d0d);
+
+            camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 100);
+            camera.position.set(0, 1.6, 6);
+
+            // Lights
+            scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+            const light = new THREE.PointLight(0xffffff, 40);
+            light.position.set(0, 4, 0);
+            scene.add(light);
+
+            // Room
+            const room = new THREE.Mesh(
+                new THREE.BoxGeometry(16, 6, 12),
+                new THREE.MeshStandardMaterial({ color: 0x1a1a1a, side: THREE.BackSide })
+            );
+            scene.add(room);
+
+            // Floor
+            const floor = new THREE.Mesh(
+                new THREE.PlaneGeometry(16, 12),
+                new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 })
+            );
+            floor.rotation.x = -Math.PI / 2;
+            scene.add(floor);
+
+            // Artworks
+            const artworks = [
+                { x: -5, z: -5.8, img: "https://picsum.photos/id/1015/800/600" },
+                { x:  0, z: -5.8, img: "https://picsum.photos/id/1016/800/600" },
+                { x:  5, z: -5.8, img: "https://picsum.photos/id/1018/800/600" },
+                { x: -5.8, z:  0, img: "https://picsum.photos/id/1025/800/600", rot: Math.PI/2 },
+                { x:  5.8, z:  0, img: "https://picsum.photos/id/1035/800/600", rot: -Math.PI/2 },
+            ];
+
+            const loader = new THREE.TextureLoader();
+            artworks.forEach(art => {
+                const tex = loader.load(art.img);
+                const frame = new THREE.Mesh(
+                    new THREE.BoxGeometry(2.4, 1.8, 0.08),
+                    new THREE.MeshStandardMaterial({ color: 0xc9a227 })
+                );
+                const painting = new THREE.Mesh(
+                    new THREE.PlaneGeometry(2.2, 1.6),
+                    new THREE.MeshBasicMaterial({ map: tex })
+                );
+                painting.position.z = 0.05;
+
+                const group = new THREE.Group();
+                group.add(frame, painting);
+                group.position.set(art.x, 1.8, art.z);
+                if (art.rot) group.rotation.y = art.rot;
+                scene.add(group);
+            });
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(innerWidth, innerHeight);
+            renderer.xr.enabled = true;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            document.body.appendChild(renderer.domElement);
+
+            document.body.appendChild(VRButton.createButton(renderer));
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.maxPolarAngle = Math.PI / 2.1;
+            controls.minDistance = 2;
+            controls.maxDistance = 10;
+
+            window.addEventListener('resize', () => {
+                camera.aspect = innerWidth / innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(innerWidth, innerHeight);
+            });
+        }
+
+        function animate() {
+            renderer.setAnimationLoop(() => {
+                controls.update();
+                renderer.render(scene, camera);
+            });
+        }
+      <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Gallery Room | ArtVerse</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { overflow: hidden; background: #000; font-family: system-ui; color: white; }
+        #back {
+            position: absolute; top: 20px; left: 20px; z-index: 20;
+            background: rgba(201,162,39,0.9); color: black; border: none;
+            padding: 10px 20px; cursor: pointer; font-weight: 600;
+        }
+        #info {
+            position: absolute; bottom: 30px; left: 30px; z-index: 20;
+            background: rgba(0,0,0,0.7); padding: 16px 24px; max-width: 360px;
+        }
+    </style>
+</head>
+<body>
+    <button id="back" onclick="location.href='index.html'">← BACK TO LOBBY</button>
+    <div id="info">
+        <h3 id="roomTitle">Classic Gallery</h3>
+        <p>Click artworks to view details. Works in VR on Meta Quest.</p>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { VRButton } from 'three/addons/webxr/VRButton.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        const params = new URLSearchParams(location.search);
+        const type = params.get('type') || 'classic';
+
+        const titles = {
+            classic: "Classic Masters Room",
+            modern: "Contemporary Room",
+            nft: "Digital / NFT Vault"
+        };
+        document.getElementById('roomTitle').textContent = titles[type];
+
+        let camera, scene, renderer, controls;
+
+        init();
+        animate();
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0d0d0d);
+
+            camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 100);
+            camera.position.set(0, 1.6, 6);
+
+            // Lights
+            scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+            const light = new THREE.PointLight(0xffffff, 40);
+            light.position.set(0, 4, 0);
+            scene.add(light);
+
+            // Room
+            const room = new THREE.Mesh(
+                new THREE.BoxGeometry(16, 6, 12),
+                new THREE.MeshStandardMaterial({ color: 0x1a1a1a, side: THREE.BackSide })
+            );
+            scene.add(room);
+
+            // Floor
+            const floor = new THREE.Mesh(
+                new THREE.PlaneGeometry(16, 12),
+                new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 })
+            );
+            floor.rotation.x = -Math.PI / 2;
+            scene.add(floor);
+
+            // Artworks
+            const artworks = [
+                { x: -5, z: -5.8, img: "https://picsum.photos/id/1015/800/600" },
+                { x:  0, z: -5.8, img: "https://picsum.photos/id/1016/800/600" },
+                { x:  5, z: -5.8, img: "https://picsum.photos/id/1018/800/600" },
+                { x: -5.8, z:  0, img: "https://picsum.photos/id/1025/800/600", rot: Math.PI/2 },
+                { x:  5.8, z:  0, img: "https://picsum.photos/id/1035/800/600", rot: -Math.PI/2 },
+            ];
+
+            const loader = new THREE.TextureLoader();
+            artworks.forEach(art => {
+                const tex = loader.load(art.img);
+                const frame = new THREE.Mesh(
+                    new THREE.BoxGeometry(2.4, 1.8, 0.08),
+                    new THREE.MeshStandardMaterial({ color: 0xc9a227 })
+                );
+                const painting = new THREE.Mesh(
+                    new THREE.PlaneGeometry(2.2, 1.6),
+                    new THREE.MeshBasicMaterial({ map: tex })
+                );
+                painting.position.z = 0.05;
+
+                const group = new THREE.Group();
+                group.add(frame, painting);
+                group.position.set(art.x, 1.8, art.z);
+                if (art.rot) group.rotation.y = art.rot;
+                scene.add(group);
+            });
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(innerWidth, innerHeight);
+            renderer.xr.enabled = true;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            document.body.appendChild(renderer.domElement);
+
+            document.body.appendChild(VRButton.createButton(renderer));
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.maxPolarAngle = Math.PI / 2.1;
+            controls.minDistance = 2;
+            controls.maxDistance = 10;
+
+            window.addEventListener('resize', () => {
+                camera.aspect = innerWidth / innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(innerWidth, innerHeight);
+            });
+        }
+
+        function animate() {
+            renderer.setAnimationLoop(() => {
+                controls.update();
+                renderer.render(scene, camera);
+            });
+        }
+    </script>
+</body>
+</html>
+
+    </script>
+</body>
+</html>
+
+    </script>
+</body>
+</html>
