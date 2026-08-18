@@ -4,7 +4,7 @@
 
 A cute, futuristic creator studio for turning **photos and videos into on-chain digital creations**.
 
-urlLaunch HyperStreamhttps://hartensteindominic.github.io/vr-3d-nft-scanner/
+**Launch:** https://hartensteindominic.github.io/vr-3d-nft-scanner/
 
 ## ✦ The experience
 
