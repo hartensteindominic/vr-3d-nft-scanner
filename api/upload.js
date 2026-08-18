@@ -1,17 +1,21 @@
-export default async function handler(req, res) {
-  if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    return res.status(204).end();
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb'
+    }
   }
+};
 
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
+  if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
-  if (!process.env.PINATA_JWT) return res.status(500).json({ error: 'PINATA_JWT is not configured on Vercel.' });
+  if (!process.env.PINATA_JWT) {
+    return res.status(500).json({ error: 'PINATA_JWT is not configured on Vercel.' });
+  }
 
   try {
     const body = req.body || {};
@@ -19,13 +23,22 @@ export default async function handler(req, res) {
     const name = body.name || 'HyperStream 3D';
     const description = body.description || 'HyperStream 3D NFT';
 
-    if (!file || !file.data || !file.name) {
-      return res.status(400).json({ error: 'Expected JSON file payload with file.data (base64) and file.name.' });
+    if (!file?.data || !file?.name) {
+      return res.status(400).json({ error: 'No 3D file was received.' });
     }
 
     const bytes = Buffer.from(file.data, 'base64');
+    if (!bytes.length) return res.status(400).json({ error: 'The uploaded 3D file was empty.' });
+    if (bytes.length > 45 * 1024 * 1024) {
+      return res.status(413).json({ error: '3D file is too large. Please use a GLB under 45 MB.' });
+    }
+
     const form = new FormData();
-    form.append('file', new Blob([bytes], { type: file.type || 'model/gltf-binary' }), file.name);
+    form.append(
+      'file',
+      new Blob([bytes], { type: file.type || 'model/gltf-binary' }),
+      file.name
+    );
 
     const upload = await fetch('https://uploads.pinata.cloud/v3/files', {
       method: 'POST',
@@ -35,28 +48,32 @@ export default async function handler(req, res) {
 
     if (!upload.ok) {
       const text = await upload.text();
-      return res.status(502).json({ error: 'Pinata GLB upload failed.', details: text });
+      return res.status(502).json({ error: 'Pinata GLB upload failed.', details: text.slice(0, 1000) });
     }
 
     const uploaded = await upload.json();
-    const cid = uploaded?.data?.cid || uploaded?.cid;
-    if (!cid) return res.status(502).json({ error: 'Pinata returned no CID.' });
+    const assetCid = uploaded?.data?.cid || uploaded?.cid;
+    if (!assetCid) return res.status(502).json({ error: 'Pinata returned no GLB CID.' });
 
+    const extension = file.name.split('.').pop()?.toUpperCase() || 'GLB';
     const metadata = {
       name,
       description,
-      image: `ipfs://${cid}`,
-      animation_url: `ipfs://${cid}`,
+      image: `ipfs://${assetCid}`,
+      animation_url: `ipfs://${assetCid}`,
       external_url: 'https://hartensteindominic.github.io/vr-3d-nft-scanner/',
       attributes: [
         { trait_type: 'Asset Type', value: '3D Model' },
-        { trait_type: 'Format', value: file.name.split('.').pop()?.toUpperCase() || 'GLB' }
+        { trait_type: 'Format', value: extension }
       ]
     };
 
-    const metadataFile = new Blob([JSON.stringify(metadata)], { type: 'application/json' });
     const metadataForm = new FormData();
-    metadataForm.append('file', metadataFile, 'metadata.json');
+    metadataForm.append(
+      'file',
+      new Blob([JSON.stringify(metadata)], { type: 'application/json' }),
+      'metadata.json'
+    );
 
     const metadataUpload = await fetch('https://uploads.pinata.cloud/v3/files', {
       method: 'POST',
@@ -66,23 +83,25 @@ export default async function handler(req, res) {
 
     if (!metadataUpload.ok) {
       const text = await metadataUpload.text();
-      return res.status(502).json({ error: 'Pinata metadata upload failed.', details: text, assetCid: cid });
+      return res.status(502).json({ error: 'Pinata metadata upload failed.', details: text.slice(0, 1000), assetCid });
     }
 
     const metadataResult = await metadataUpload.json();
     const metadataCid = metadataResult?.data?.cid || metadataResult?.cid;
-    if (!metadataCid) return res.status(502).json({ error: 'Pinata returned no metadata CID.', assetCid: cid });
+    if (!metadataCid) return res.status(502).json({ error: 'Pinata returned no metadata CID.', assetCid });
 
     return res.status(200).json({
-      assetCid: cid,
-      assetUri: `ipfs://${cid}`,
+      assetCid,
+      assetUri: `ipfs://${assetCid}`,
       metadataCid,
       metadataUri: `ipfs://${metadataCid}`,
-      gatewayUrl: `https://gateway.pinata.cloud/ipfs/${cid}`,
+      gatewayUrl: `https://gateway.pinata.cloud/ipfs/${assetCid}`,
       metadata
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: error?.message || 'Upload failed.' });
+    console.error('HyperStream upload error:', error);
+    return res.status(500).json({
+      error: error?.message || 'Upload failed. Please try a smaller GLB.'
+    });
   }
 }
