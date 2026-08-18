@@ -1,110 +1,50 @@
-# ✦ HYPERSTREAM
+# ✦ HyperStream
 
-# Make it yours.
+## Make it yours.
 
-**Capture → Create → IPFS → CID → Mint → Own → Share → Explore**
+HyperStream is a mobile-first, futuristic **3D creation studio + NFT launcher** built for phones, laptops, and spatial browsers.
 
-HyperStream is a cute, futuristic spatial creation studio for turning **photos and videos into on-chain digital creations** from a phone, desktop, or Meta Quest browser.
+### What the rebuild includes
 
-## 🌸 The experience
+- 📷 Live rear-camera capture with permission handling
+- 🌀 Guided 12-frame spatial scan workflow
+- 🧊 Real-time Three.js holographic 3D scene
+- 📦 GLB / GLTF import
+- 💾 Local creator state and collection persistence
+- 🖼️ PNG studio snapshots
+- 📤 GLB export
+- 🦊 Direct MetaMask / EIP-1193 wallet connection
+- ⛓️ Ethereum Sepolia chain detection and switching
+- ✍️ NFT metadata generation
+- 🪙 Test mint flow using the configured Sepolia contract
+- 🔎 Etherscan transaction link after mint
+- 📱 Responsive mobile UI with large touch targets
+- 🥽 Quest-friendly spatial layout and WebGL presentation
 
-- 📸 Take a photo directly from your device
-- 🎥 Record or upload video
-- 🖼️ Preview your creation in a floating holographic space
-- ☁️ Upload media to IPFS
-- 🧬 Generate and display the content CID + metadata CID
-- ✍️ Add name, creator, description, traits and collection information
-- 🦊 Connect MetaMask
-- ⛓️ Mint on Ethereum Sepolia
-- 🔍 View the transaction on Etherscan
-- 📋 Copy the transaction hash
-- 📤 Share the finished creation
-- 🥽 Prepare creations for spatial / Quest experiences
+### Flow
 
-**Scanning is not required for the core mint flow.** A normal photo or video is enough to create the media-backed NFT metadata.
+`CAMERA / GLB → 3D STUDIO → COLLECTION → METADATA → WALLET → SEPOLIA MINT`
 
-## 🪐 Design language
+### Important 3D note
 
-HyperStream deliberately avoids the traditional crypto dashboard.
+The browser camera is RGB-only on most phones and laptops. The scan UI captures multiple views and records the scan pass, but a true photogrammetry / NeRF reconstruction backend is still required to turn those views into a high-fidelity watertight mesh automatically. HyperStream is structured so that a future reconstruction service can replace the preview object without rebuilding the creator UI.
 
-The interface is built around:
+### Blockchain
 
-- 🫧 floating glass controls
-- 🌈 aurora gradients
-- ✦ glowing particles
-- 🪐 orbital elements
-- 🔮 holographic previews
-- 🎀 organic pill controls
-- 📱 mobile-first touch interaction
-- 🥽 large Quest-friendly controls
-- 🌙 deep-space environments
+Default network: **Ethereum Sepolia testnet**.
 
-The central message is always:
-
-> **Make it yours.**
-
-## ⛓️ Current blockchain
-
-Current minting environment: **Ethereum Sepolia testnet**.
-
-Contract:
+Default contract:
 
 `0x6ebd920e2383e11a06440ed632c51225b5f1909b`
 
-Do not send real funds to the test contract.
+The contract address can be overridden in browser local storage for development. Never send real funds to a test contract.
 
-## ☁️ Media pipeline
+### Deployment
 
-`PHOTO / VIDEO → SIGNED UPLOAD → IPFS CID → METADATA → METADATA CID → WALLET SIGNATURE → NFT`
+The project is designed for GitHub Pages as a static application. Camera access requires a secure context such as GitHub Pages HTTPS, and the user must grant browser camera permission.
 
-The application supports media up to the configured **250 MB** upload ceiling.
+### Next production layer
 
-## 🚀 Product roadmap
-
-### Creator
-- [x] Photo upload / camera capture
-- [x] Video upload / capture
-- [x] IPFS media upload
-- [x] CID display
-- [x] Metadata generation
-- [x] Wallet connection
-- [x] Sepolia mint flow
-- [x] Transaction confirmation
-- [x] Shareable result
-- [ ] Advanced editing
-- [ ] AI-assisted metadata
-- [ ] Rich 3D reconstruction
-
-### Spatial
-- [x] Floating 3D-inspired creator interface
-- [ ] Full WebXR gallery
-- [ ] Grab / rotate / scale objects in Quest
-- [ ] Spatial audio
-- [ ] Personal 3D gallery
-
-### Marketplace
-- [ ] Creator profiles
-- [ ] Collections
-- [ ] Favorites
-- [ ] Listings
-- [ ] Offers
-- [ ] Sales history
-- [ ] Provenance timeline
-- [ ] Discovery / trending stream
-
-### Creator economy
-- [ ] Royalties
-- [ ] Digital drops
-- [ ] Generative collections
-- [ ] Creator achievements
-- [ ] Collector profiles
-
-## 📣 Promotion
-
-Release-based GitHub Actions are prepared for automated Bluesky and X announcements. Secrets stay in GitHub Actions and never belong in source code.
-
-## 🧪 Status
-
-HyperStream is an evolving prototype. Sepolia is the current testing environment. Production mainnet deployment, marketplace contracts, payments, and advanced 3D reconstruction remain separate production milestones.
+For a production marketplace, add a secure upload/reconstruction backend, IPFS pinning, marketplace/listing contracts, creator profiles, collection indexing, offers, provenance, royalties, and a dedicated 3D reconstruction pipeline.
 
 **Capture something real. Give it a world. Make it yours. ✦**
