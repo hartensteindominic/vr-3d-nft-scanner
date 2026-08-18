@@ -3,16 +3,26 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ArtVerse | 3D Marketplace</title>
+    <title>3D NFT Creator | VR Scanner</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { overflow: hidden; background: #0a0a0a; font-family: 'Segoe UI', system-ui, sans-serif; color: white; }
+        body { 
+            overflow: hidden; 
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%); 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            color: white; 
+        }
+
+        #canvas { display: block; width: 100%; height: 100vh; }
 
         #ui {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none;
             z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .top-bar {
@@ -24,57 +34,249 @@
             background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
         }
 
-        .logo { font-size: 28px; font-weight: 300; letter-spacing: 8px; }
-        .logo span { color: #c9a227; }
+        .logo { 
+            font-size: 28px; 
+            font-weight: 700; 
+            letter-spacing: 4px; 
+            background: linear-gradient(135deg, #c9a227, #e0b83a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-        .vr-btn {
+        .controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        button {
+            pointer-events: auto;
             background: #c9a227;
             color: black;
             border: none;
-            padding: 12px 28px;
-            font-size: 16px;
-            font-weight: 600;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 700;
             cursor: pointer;
-            border-radius: 4px;
+            border-radius: 6px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        button:hover { 
+            background: #e0b83a;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(201,162,39,0.3);
+        }
+
+        button:active { transform: translateY(0); }
+
+        .sidebar {
+            pointer-events: auto;
+            position: absolute;
+            left: 30px;
+            top: 120px;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(10px);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(201,162,39,0.3);
+            max-width: 320px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .sidebar h3 {
+            margin-bottom: 16px;
+            color: #c9a227;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 6px;
+            color: #aaa;
+            text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        .vr-btn:hover { background: #e0b83a; }
-
-        .info {
-            position: absolute;
-            bottom: 40px;
-            left: 40px;
-            max-width: 400px;
-            background: rgba(0,0,0,0.6);
-            padding: 24px;
-            border-left: 4px solid #c9a227;
-            backdrop-filter: blur(10px);
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
         }
 
-        .info h2 { font-weight: 300; margin-bottom: 8px; }
-        .info p { opacity: 0.8; font-size: 14px; line-height: 1.6; }
+        input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
 
-        canvas { display: block; }
+        .info-box {
+            pointer-events: auto;
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-left: 4px solid #c9a227;
+            border-radius: 8px;
+            max-width: 380px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .info-box h4 {
+            color: #c9a227;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .status {
+            pointer-events: auto;
+            position: absolute;
+            top: 80px;
+            right: 30px;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            padding: 16px 24px;
+            border-radius: 8px;
+            border: 1px solid rgba(201,162,39,0.3);
+            font-size: 12px;
+            max-width: 300px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(201,162,39,0.1);
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .status-label { color: #aaa; }
+        .status-value { color: #c9a227; font-weight: 600; }
+
+        .export-section {
+            pointer-events: auto;
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(201,162,39,0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .top-bar { padding: 16px 20px; }
+            .sidebar { left: 15px; right: 15px; max-width: none; }
+            .info-box { left: 15px; right: 15px; max-width: none; }
+            .export-section { right: 15px; }
+        }
     </style>
 </head>
 <body>
     <div id="ui">
         <div class="top-bar">
-            <div class="logo">ART<span>VERSE</span></div>
-            <button class="vr-btn" id="vrButton">ENTER VR</button>
+            <div class="logo">NFTVERSE</div>
+            <div class="controls">
+                <button id="resetBtn">Reset</button>
+                <button id="vrBtn">VR Mode</button>
+            </div>
         </div>
-        <div class="info">
-            <h2>Welcome to the Gallery</h2>
-            <p>Walk around or click the golden portals to enter different rooms. Works on Meta Quest via WebXR.</p>
+
+        <div class="sidebar">
+            <h3>3D Creator</h3>
+            
+            <div class="control-group">
+                <label>Shape Type</label>
+                <select id="shapeSelect" style="width: 100%; padding: 8px; background: #1a1a2e; color: #c9a227; border: 1px solid #c9a227; border-radius: 4px; cursor: pointer;">
+                    <option value="cube">Cube</option>
+                    <option value="sphere">Sphere</option>
+                    <option value="torus">Torus</option>
+                    <option value="pyramid">Pyramid</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Scale</label>
+                <input type="range" id="scaleSlider" min="0.5" max="3" step="0.1" value="1" style="cursor: pointer;">
+            </div>
+
+            <div class="control-group">
+                <label>Rotation Speed</label>
+                <input type="range" id="rotationSlider" min="0" max="5" step="0.1" value="2" style="cursor: pointer;">
+            </div>
+
+            <div class="control-group">
+                <label>Color</label>
+                <input type="color" id="colorPicker" value="#c9a227">
+            </div>
+
+            <div class="control-group">
+                <label>Metalness</label>
+                <input type="range" id="metalnessSlider" min="0" max="1" step="0.1" value="0.8" style="cursor: pointer;">
+            </div>
+
+            <div class="control-group">
+                <label>Roughness</label>
+                <input type="range" id="roughnessSlider" min="0" max="1" step="0.1" value="0.2" style="cursor: pointer;">
+            </div>
+        </div>
+
+        <div class="status">
+            <div class="status-item">
+                <span class="status-label">FPS:</span>
+                <span class="status-value" id="fps">60</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Objects:</span>
+                <span class="status-value" id="objectCount">1</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Mode:</span>
+                <span class="status-value" id="modeDisplay">Desktop</span>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h4>✨ Welcome to 3D NFT Creator</h4>
+            <p>Customize the 3D object using the controls on the left. Click and drag to rotate. Use your mouse wheel to zoom. Export as NFT when ready!</p>
+        </div>
+
+        <div class="export-section">
+            <button id="screenshotBtn" style="padding: 12px 20px; font-size: 12px;">📸 Screenshot</button>
+            <button id="exportBtn" style="padding: 12px 20px; font-size: 12px;">💾 Export NFT Data</button>
         </div>
     </div>
 
     <script type="importmap">
     {
         "imports": {
-            "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
+            "three": "https://unpkg.com/three@r128/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@r128/examples/jsm/"
         }
     }
     </script>
@@ -82,118 +284,196 @@
     <script type="module">
         import * as THREE from 'three';
         import { VRButton } from 'three/addons/webxr/VRButton.js';
-        import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-        let camera, scene, renderer;
-        let controllers = [];
+        let camera, scene, renderer, controls, mainObject;
+        let currentShape = 'cube';
+        let stats = { fps: 0, frameCount: 0, lastTime: performance.now() };
 
+        // Initialize
         init();
         animate();
 
         function init() {
+            // Scene setup
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x111111);
-            scene.fog = new THREE.Fog(0x111111, 10, 50);
+            scene.background = new THREE.Color(0x1a1a2e);
+            scene.fog = new THREE.Fog(0x1a1a2e, 100, 1000);
 
-            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.set(0, 1.6, 8);
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+            camera.position.set(0, 2, 5);
 
             // Lighting
-            const ambient = new THREE.AmbientLight(0xffffff, 0.4);
-            scene.add(ambient);
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
 
-            const spot1 = new THREE.SpotLight(0xffffff, 80);
-            spot1.position.set(0, 8, 0);
-            spot1.angle = Math.PI / 4;
-            spot1.penumbra = 0.5;
-            scene.add(spot1);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 15, 10);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            const pointLight = new THREE.PointLight(0xc9a227, 0.5);
+            pointLight.position.set(-5, 3, 5);
+            scene.add(pointLight);
 
             // Floor
-            const floorGeo = new THREE.PlaneGeometry(40, 40);
+            const floorGeo = new THREE.PlaneGeometry(50, 50);
             const floorMat = new THREE.MeshStandardMaterial({ 
-                color: 0x1a1a1a, 
+                color: 0x0f0f1e, 
                 roughness: 0.8,
-                metalness: 0.2
+                metalness: 0.1
             });
             const floor = new THREE.Mesh(floorGeo, floorMat);
             floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
             scene.add(floor);
 
-            // Central sculpture / logo
-            const torus = new THREE.Mesh(
-                new THREE.TorusKnotGeometry(1.2, 0.4, 128, 32),
-                new THREE.MeshStandardMaterial({ color: 0xc9a227, metalness: 0.9, roughness: 0.1 })
-            );
-            torus.position.y = 2;
-            scene.add(torus);
+            // Grid helper
+            const gridHelper = new THREE.GridHelper(40, 40, 0x333333, 0x111111);
+            scene.add(gridHelper);
 
-            // Room Portals
-            createPortal(-8, 0, -6, "Classic Room", "room.html?type=classic");
-            createPortal( 8, 0, -6, "Modern Room", "room.html?type=modern");
-            createPortal( 0, 0, -12, "NFT Vault", "room.html?type=nft");
+            // Create initial object
+            createShape('cube');
 
             // Renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
             renderer.xr.enabled = true;
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.2;
+            renderer.toneMappingExposure = 1;
             document.body.appendChild(renderer.domElement);
 
+            // Controls
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 2;
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
             // VR Button
-            document.getElementById('vrButton').addEventListener('click', () => {
-                renderer.xr.getSession() ? renderer.xr.getSession().end() : 
-                document.body.appendChild(VRButton.createButton(renderer));
+            document.getElementById('vrBtn').addEventListener('click', () => {
+                if (renderer.xr.isPresenting) {
+                    renderer.xr.getSession().end();
+                } else {
+                    document.body.appendChild(VRButton.createButton(renderer));
+                }
             });
 
-            // Controllers (for Quest)
-            const controllerModelFactory = new XRControllerModelFactory();
-            for (let i = 0; i < 2; i++) {
-                const controller = renderer.xr.getController(i);
-                scene.add(controller);
-                controllers.push(controller);
+            // UI Controls
+            document.getElementById('shapeSelect').addEventListener('change', (e) => {
+                createShape(e.target.value);
+            });
 
-                const grip = renderer.xr.getControllerGrip(i);
-                grip.add(controllerModelFactory.createControllerModel(grip));
-                scene.add(grip);
-            }
+            document.getElementById('scaleSlider').addEventListener('input', (e) => {
+                mainObject.scale.set(e.target.value, e.target.value, e.target.value);
+            });
+
+            document.getElementById('rotationSlider').addEventListener('input', (e) => {
+                controls.autoRotateSpeed = parseFloat(e.target.value);
+            });
+
+            document.getElementById('colorPicker').addEventListener('input', (e) => {
+                mainObject.material.color.set(e.target.value);
+            });
+
+            document.getElementById('metalnessSlider').addEventListener('input', (e) => {
+                mainObject.material.metalness = parseFloat(e.target.value);
+            });
+
+            document.getElementById('roughnessSlider').addEventListener('input', (e) => {
+                mainObject.material.roughness = parseFloat(e.target.value);
+            });
+
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                camera.position.set(0, 2, 5);
+                controls.reset();
+                document.getElementById('scaleSlider').value = 1;
+                document.getElementById('rotationSlider').value = 2;
+                document.getElementById('colorPicker').value = '#c9a227';
+                mainObject.scale.set(1, 1, 1);
+                mainObject.material.color.set(0xc9a227);
+                mainObject.material.metalness = 0.8;
+                mainObject.material.roughness = 0.2;
+            });
+
+            document.getElementById('screenshotBtn').addEventListener('click', takeScreenshot);
+            document.getElementById('exportBtn').addEventListener('click', exportNFTData);
 
             window.addEventListener('resize', onWindowResize);
         }
 
-        function createPortal(x, y, z, name, url) {
-            const group = new THREE.Group();
-            group.position.set(x, 1.8, z);
+        function createShape(type) {
+            if (mainObject) scene.remove(mainObject);
 
-            const frame = new THREE.Mesh(
-                new THREE.BoxGeometry(3.2, 2.4, 0.15),
-                new THREE.MeshStandardMaterial({ color: 0xc9a227, metalness: 0.8 })
-            );
-            group.add(frame);
+            currentShape = type;
+            let geometry;
 
-            const inner = new THREE.Mesh(
-                new THREE.PlaneGeometry(2.8, 2),
-                new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide })
-            );
-            inner.position.z = 0.08;
-            group.add(inner);
+            switch(type) {
+                case 'sphere':
+                    geometry = new THREE.IcosahedronGeometry(1.5, 32);
+                    break;
+                case 'torus':
+                    geometry = new THREE.TorusKnotGeometry(1, 0.4, 128, 32);
+                    break;
+                case 'pyramid':
+                    geometry = new THREE.ConeGeometry(1.5, 3, 4);
+                    break;
+                default:
+                    geometry = new THREE.BoxGeometry(2, 2, 2);
+            }
 
-            // Clickable
-            group.userData = { url };
-            scene.add(group);
-
-            // Simple click (desktop)
-            renderer.domElement.addEventListener('click', (e) => {
-                const mouse = new THREE.Vector2(
-                    (e.clientX / window.innerWidth) * 2 - 1,
-                    -(e.clientY / window.innerHeight) * 2 + 1
-                );
-                const raycaster = new THREE.Raycaster();
-                raycaster.setFromCamera(mouse, camera);
-                const intersects = raycaster.intersectObject(group, true);
-                if (intersects.length > 0) window.location.href = url;
+            const material = new THREE.MeshStandardMaterial({
+                color: 0xc9a227,
+                metalness: 0.8,
+                roughness: 0.2,
+                envMapIntensity: 1
             });
+
+            mainObject = new THREE.Mesh(geometry, material);
+            mainObject.castShadow = true;
+            mainObject.receiveShadow = true;
+            scene.add(mainObject);
+
+            document.getElementById('objectCount').textContent = scene.children.length;
+        }
+
+        function takeScreenshot() {
+            const link = document.createElement('a');
+            link.href = renderer.domElement.toDataURL('image/png');
+            link.download = `nft-${Date.now()}.png`;
+            link.click();
+        }
+
+        function exportNFTData() {
+            const nftData = {
+                name: `NFT-${Date.now()}`,
+                type: currentShape,
+                properties: {
+                    scale: mainObject.scale.x,
+                    color: mainObject.material.color.getHexString(),
+                    metalness: mainObject.material.metalness,
+                    roughness: mainObject.material.roughness,
+                    rotation: {
+                        x: mainObject.rotation.x,
+                        y: mainObject.rotation.y,
+                        z: mainObject.rotation.z
+                    }
+                },
+                timestamp: new Date().toISOString(),
+                exportedFrom: 'NFTVERSE 3D Creator'
+            };
+
+            const dataStr = JSON.stringify(nftData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `${nftData.name}.json`;
+            link.click();
         }
 
         function onWindowResize() {
@@ -202,297 +482,25 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        function animate() {
-            renderer.setAnimationLoop(() => {
-                renderer.render(scene, camera);
-            });
-        }
-      <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <title>Gallery Room | ArtVerse</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { overflow: hidden; background: #000; font-family: system-ui; color: white; }
-        #back {
-            position: absolute; top: 20px; left: 20px; z-index: 20;
-            background: rgba(201,162,39,0.9); color: black; border: none;
-            padding: 10px 20px; cursor: pointer; font-weight: 600;
-        }
-        #info {
-            position: absolute; bottom: 30px; left: 30px; z-index: 20;
-            background: rgba(0,0,0,0.7); padding: 16px 24px; max-width: 360px;
-        }
-    </style>
-</head>
-<body>
-    <button id="back" onclick="location.href='index.html'">← BACK TO LOBBY</button>
-    <div id="info">
-        <h3 id="roomTitle">Classic Gallery</h3>
-        <p>Click artworks to view details. Works in VR on Meta Quest.</p>
-    </div>
-
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
-        }
-    }
-    </script>
-
-    <script type="module">
-        import * as THREE from 'three';
-        import { VRButton } from 'three/addons/webxr/VRButton.js';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
-        const params = new URLSearchParams(location.search);
-        const type = params.get('type') || 'classic';
-
-        const titles = {
-            classic: "Classic Masters Room",
-            modern: "Contemporary Room",
-            nft: "Digital / NFT Vault"
-        };
-        document.getElementById('roomTitle').textContent = titles[type];
-
-        let camera, scene, renderer, controls;
-
-        init();
-        animate();
-
-        function init() {
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0d0d0d);
-
-            camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 100);
-            camera.position.set(0, 1.6, 6);
-
-            // Lights
-            scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-            const light = new THREE.PointLight(0xffffff, 40);
-            light.position.set(0, 4, 0);
-            scene.add(light);
-
-            // Room
-            const room = new THREE.Mesh(
-                new THREE.BoxGeometry(16, 6, 12),
-                new THREE.MeshStandardMaterial({ color: 0x1a1a1a, side: THREE.BackSide })
-            );
-            scene.add(room);
-
-            // Floor
-            const floor = new THREE.Mesh(
-                new THREE.PlaneGeometry(16, 12),
-                new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 })
-            );
-            floor.rotation.x = -Math.PI / 2;
-            scene.add(floor);
-
-            // Artworks
-            const artworks = [
-                { x: -5, z: -5.8, img: "https://picsum.photos/id/1015/800/600" },
-                { x:  0, z: -5.8, img: "https://picsum.photos/id/1016/800/600" },
-                { x:  5, z: -5.8, img: "https://picsum.photos/id/1018/800/600" },
-                { x: -5.8, z:  0, img: "https://picsum.photos/id/1025/800/600", rot: Math.PI/2 },
-                { x:  5.8, z:  0, img: "https://picsum.photos/id/1035/800/600", rot: -Math.PI/2 },
-            ];
-
-            const loader = new THREE.TextureLoader();
-            artworks.forEach(art => {
-                const tex = loader.load(art.img);
-                const frame = new THREE.Mesh(
-                    new THREE.BoxGeometry(2.4, 1.8, 0.08),
-                    new THREE.MeshStandardMaterial({ color: 0xc9a227 })
-                );
-                const painting = new THREE.Mesh(
-                    new THREE.PlaneGeometry(2.2, 1.6),
-                    new THREE.MeshBasicMaterial({ map: tex })
-                );
-                painting.position.z = 0.05;
-
-                const group = new THREE.Group();
-                group.add(frame, painting);
-                group.position.set(art.x, 1.8, art.z);
-                if (art.rot) group.rotation.y = art.rot;
-                scene.add(group);
-            });
-
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(innerWidth, innerHeight);
-            renderer.xr.enabled = true;
-            renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            document.body.appendChild(renderer.domElement);
-
-            document.body.appendChild(VRButton.createButton(renderer));
-
-            controls = new OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.maxPolarAngle = Math.PI / 2.1;
-            controls.minDistance = 2;
-            controls.maxDistance = 10;
-
-            window.addEventListener('resize', () => {
-                camera.aspect = innerWidth / innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(innerWidth, innerHeight);
-            });
+        function updateFPS() {
+            stats.frameCount++;
+            const now = performance.now();
+            if (now >= stats.lastTime + 1000) {
+                stats.fps = stats.frameCount;
+                document.getElementById('fps').textContent = stats.fps;
+                stats.frameCount = 0;
+                stats.lastTime = now;
+            }
         }
 
         function animate() {
             renderer.setAnimationLoop(() => {
+                updateFPS();
                 controls.update();
                 renderer.render(scene, camera);
+                document.getElementById('modeDisplay').textContent = renderer.xr.isPresenting ? 'VR' : 'Desktop';
             });
         }
-      <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <title>Gallery Room | ArtVerse</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { overflow: hidden; background: #000; font-family: system-ui; color: white; }
-        #back {
-            position: absolute; top: 20px; left: 20px; z-index: 20;
-            background: rgba(201,162,39,0.9); color: black; border: none;
-            padding: 10px 20px; cursor: pointer; font-weight: 600;
-        }
-        #info {
-            position: absolute; bottom: 30px; left: 30px; z-index: 20;
-            background: rgba(0,0,0,0.7); padding: 16px 24px; max-width: 360px;
-        }
-    </style>
-</head>
-<body>
-    <button id="back" onclick="location.href='index.html'">← BACK TO LOBBY</button>
-    <div id="info">
-        <h3 id="roomTitle">Classic Gallery</h3>
-        <p>Click artworks to view details. Works in VR on Meta Quest.</p>
-    </div>
-
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
-        }
-    }
-    </script>
-
-    <script type="module">
-        import * as THREE from 'three';
-        import { VRButton } from 'three/addons/webxr/VRButton.js';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
-        const params = new URLSearchParams(location.search);
-        const type = params.get('type') || 'classic';
-
-        const titles = {
-            classic: "Classic Masters Room",
-            modern: "Contemporary Room",
-            nft: "Digital / NFT Vault"
-        };
-        document.getElementById('roomTitle').textContent = titles[type];
-
-        let camera, scene, renderer, controls;
-
-        init();
-        animate();
-
-        function init() {
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0d0d0d);
-
-            camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 100);
-            camera.position.set(0, 1.6, 6);
-
-            // Lights
-            scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-            const light = new THREE.PointLight(0xffffff, 40);
-            light.position.set(0, 4, 0);
-            scene.add(light);
-
-            // Room
-            const room = new THREE.Mesh(
-                new THREE.BoxGeometry(16, 6, 12),
-                new THREE.MeshStandardMaterial({ color: 0x1a1a1a, side: THREE.BackSide })
-            );
-            scene.add(room);
-
-            // Floor
-            const floor = new THREE.Mesh(
-                new THREE.PlaneGeometry(16, 12),
-                new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 })
-            );
-            floor.rotation.x = -Math.PI / 2;
-            scene.add(floor);
-
-            // Artworks
-            const artworks = [
-                { x: -5, z: -5.8, img: "https://picsum.photos/id/1015/800/600" },
-                { x:  0, z: -5.8, img: "https://picsum.photos/id/1016/800/600" },
-                { x:  5, z: -5.8, img: "https://picsum.photos/id/1018/800/600" },
-                { x: -5.8, z:  0, img: "https://picsum.photos/id/1025/800/600", rot: Math.PI/2 },
-                { x:  5.8, z:  0, img: "https://picsum.photos/id/1035/800/600", rot: -Math.PI/2 },
-            ];
-
-            const loader = new THREE.TextureLoader();
-            artworks.forEach(art => {
-                const tex = loader.load(art.img);
-                const frame = new THREE.Mesh(
-                    new THREE.BoxGeometry(2.4, 1.8, 0.08),
-                    new THREE.MeshStandardMaterial({ color: 0xc9a227 })
-                );
-                const painting = new THREE.Mesh(
-                    new THREE.PlaneGeometry(2.2, 1.6),
-                    new THREE.MeshBasicMaterial({ map: tex })
-                );
-                painting.position.z = 0.05;
-
-                const group = new THREE.Group();
-                group.add(frame, painting);
-                group.position.set(art.x, 1.8, art.z);
-                if (art.rot) group.rotation.y = art.rot;
-                scene.add(group);
-            });
-
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(innerWidth, innerHeight);
-            renderer.xr.enabled = true;
-            renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            document.body.appendChild(renderer.domElement);
-
-            document.body.appendChild(VRButton.createButton(renderer));
-
-            controls = new OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.maxPolarAngle = Math.PI / 2.1;
-            controls.minDistance = 2;
-            controls.maxDistance = 10;
-
-            window.addEventListener('resize', () => {
-                camera.aspect = innerWidth / innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(innerWidth, innerHeight);
-            });
-        }
-
-        function animate() {
-            renderer.setAnimationLoop(() => {
-                controls.update();
-                renderer.render(scene, camera);
-            });
-        }
-    </script>
-</body>
-</html>
-
-    </script>
-</body>
-</html>
-
     </script>
 </body>
 </html>
