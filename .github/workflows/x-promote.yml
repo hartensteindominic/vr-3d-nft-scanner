@@ -1,4 +1,4 @@
-name: HyperStream Auto-Promote to X
+name: Auto-Post Release to X
 
 on:
   release:
@@ -8,14 +8,21 @@ permissions:
   contents: read
 
 jobs:
-  x-post:
+  tweet:
     runs-on: ubuntu-latest
     steps:
-      - name: Post HyperStream release to X
+      - name: Send Release Tweet
         if: ${{ secrets.TWITTER_CONSUMER_API_KEY != '' && secrets.TWITTER_CONSUMER_API_SECRET != '' && secrets.TWITTER_ACCESS_TOKEN != '' && secrets.TWITTER_ACCESS_TOKEN_SECRET != '' }}
         uses: ethomson/send-tweet-action@v1
         with:
-          status: "🌌 HyperStream just evolved! Turn photos & videos into interactive 3D creations, mint them on-chain, and share them from the browser. 🥽 Quest · 📱 iPhone · 💻 Desktop\n\nCreate yours: https://hartensteindominic.github.io/vr-3d-nft-scanner/\nRelease: ${{ github.event.release.html_url }}"
+          status: |
+            🌌 HyperStream just evolved (${{ github.event.release.tag_name }}).
+
+            ${{ github.event.release.body }}
+
+            🥽 Quest · 📱 iPhone · 💻 Desktop
+            Create yours → https://hartensteindominic.github.io/vr-3d-nft-scanner/
+            Release → ${{ github.event.release.html_url }}
           consumer-key: ${{ secrets.TWITTER_CONSUMER_API_KEY }}
           consumer-secret: ${{ secrets.TWITTER_CONSUMER_API_SECRET }}
           access-token: ${{ secrets.TWITTER_ACCESS_TOKEN }}
@@ -28,5 +35,5 @@ jobs:
           if [ "$X_CONFIGURED" = "true" ]; then
             echo "✅ HyperStream release promotion sent to X."
           else
-            echo "ℹ️ X secrets are not configured yet. No post was sent."
+            echo "ℹ️ X secrets are not configured yet. No post was sent because X secrets are missing."
           fi
