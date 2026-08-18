@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VR 3D NFT Scanner – AR + VR Holograms</title>
+  <title>VR 3D NFT Scanner – Scan • Hologram • AR/VR • Trade</title>
   <link rel="stylesheet" href="css/style.css" />
   <script type="importmap">
   {
@@ -19,18 +19,27 @@
   <div id="viewport-container">
     <div id="loading-overlay">
       <div class="spinner"></div>
-      <p>Loading AR / VR hologram engine...</p>
+      <p>Initializing hologram engine...</p>
     </div>
   </div>
 
+  <!-- Top Navigation -->
   <header id="top-bar">
     <div class="logo">
       <span class="logo-icon">◈</span>
       <div>
         <h1>VR 3D NFT Scanner</h1>
-        <p class="tagline">Scan → Hologram → AR / VR → NFT</p>
+        <p class="tagline">Scan → Hologram → AR/VR → Own & Trade</p>
       </div>
     </div>
+
+    <nav class="main-nav">
+      <button class="nav-btn active" data-view="gallery">Gallery</button>
+      <button class="nav-btn" data-view="library">Library</button>
+      <button class="nav-btn" data-view="marketplace">Marketplace</button>
+      <button class="nav-btn" data-view="create">Create</button>
+    </nav>
+
     <div class="top-actions">
       <button id="btn-connect" class="btn btn-primary">Connect Wallet</button>
       <div id="wallet-info" class="wallet-info hidden">
@@ -40,70 +49,102 @@
     </div>
   </header>
 
-  <aside id="left-panel" class="floating-panel">
+  <!-- CREATE / CAPTURE PANEL -->
+  <aside id="create-panel" class="side-panel left hidden">
     <div class="panel-header">
-      <h2>Capture</h2>
-      <button class="panel-toggle" data-panel="left">−</button>
+      <h2>Create New Hologram</h2>
+      <button class="close-panel" data-panel="create">×</button>
     </div>
     <div class="panel-body">
       <div class="scan-modes">
-        <button class="mode-btn active" data-mode="guided">Guided</button>
-        <button class="mode-btn" data-mode="upload">Upload</button>
+        <button class="mode-btn active" data-mode="guided">Guided Scan</button>
+        <button class="mode-btn" data-mode="upload">Upload GLB</button>
       </div>
 
       <div id="guided-scan" class="mode-content">
-        <ol class="steps">
-          <li>Place object in good light</li>
-          <li>Circle slowly with Polycam / Scaniverse</li>
-          <li>Export as <strong>GLB</strong></li>
-        </ol>
-        <button id="btn-start-scan-guide" class="btn btn-secondary full">Start Guide</button>
+        <div class="step-cards">
+          <div class="step-card"><span>1</span><p>Place object in good light on a flat surface</p></div>
+          <div class="step-card"><span>2</span><p>Open Polycam or Scaniverse and circle slowly</p></div>
+          <div class="step-card"><span>3</span><p>Export as <strong>GLB</strong> and upload here</p></div>
+        </div>
+        <button id="btn-start-scan-guide" class="btn btn-secondary full">How to Scan</button>
       </div>
 
       <div id="upload-mode" class="mode-content hidden">
         <div id="drop-zone" class="drop-zone">
           <div class="drop-icon">⬆</div>
-          <p>Drop <strong>.glb</strong> here</p>
+          <p>Drop your <strong>.glb</strong> file here</p>
+          <span class="small">or click to browse</span>
           <input type="file" id="file-input" accept=".glb,.gltf" hidden />
         </div>
-        <div id="upload-status" class="status-box hidden"></div>
       </div>
 
-      <div id="current-model-info" class="model-info">
-        <p class="empty">No model loaded</p>
+      <div id="current-model-info" class="model-card">
+        <p class="empty">No model loaded yet</p>
       </div>
-      <button id="btn-clear-model" class="btn btn-ghost full hidden">Clear Model</button>
-    </div>
-  </aside>
 
-  <aside id="right-panel" class="floating-panel">
-    <div class="panel-header">
-      <h2>Mint NFT</h2>
-      <button class="panel-toggle" data-panel="right">−</button>
-    </div>
-    <div class="panel-body">
-      <label>Name
-        <input type="text" id="nft-name" placeholder="My Hologram" maxlength="64" />
-      </label>
-      <label>Description
-        <textarea id="nft-desc" placeholder="Scanned from real life..." rows="2"></textarea>
-      </label>
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="nft-name" placeholder="My Scanned Object" maxlength="64" />
+      </div>
+      <div class="form-group">
+        <label>Description <button id="btn-ai-desc" class="btn-ai" title="Generate with AI">✦ AI</button></label>
+        <textarea id="nft-desc" placeholder="Describe your hologram..." rows="3"></textarea>
+      </div>
 
-      <div class="mint-actions">
-        <button id="btn-prepare-mint" class="btn btn-secondary full" disabled>Upload to IPFS</button>
-        <button id="btn-mint" class="btn btn-primary full" disabled>Mint NFT</button>
+      <div class="action-stack">
+        <button id="btn-prepare-mint" class="btn btn-secondary full" disabled>1. Upload to IPFS</button>
+        <button id="btn-mint" class="btn btn-primary full" disabled>2. Mint as NFT</button>
+        <button id="btn-clear-model" class="btn btn-ghost full hidden">Clear Model</button>
       </div>
       <div id="mint-status" class="status-box hidden"></div>
+    </div>
+  </aside>
 
-      <div class="divider"></div>
-      <h3>My Collection</h3>
-      <div id="collection-list" class="collection-list">
-        <p class="empty">Connect wallet to view</p>
+  <!-- LIBRARY PANEL -->
+  <aside id="library-panel" class="side-panel right hidden">
+    <div class="panel-header">
+      <h2>My Library</h2>
+      <button class="close-panel" data-panel="library">×</button>
+    </div>
+    <div class="panel-body">
+      <p class="panel-desc">Your owned 3D hologram NFTs</p>
+      <div id="library-list" class="card-list">
+        <div class="empty-state">
+          <p>Connect wallet & mint to build your library</p>
+        </div>
       </div>
     </div>
   </aside>
 
-  <!-- Bottom controls with both AR and VR -->
+  <!-- MARKETPLACE PANEL -->
+  <aside id="marketplace-panel" class="side-panel right hidden">
+    <div class="panel-header">
+      <h2>Marketplace</h2>
+      <button class="close-panel" data-panel="marketplace">×</button>
+    </div>
+    <div class="panel-body">
+      <div class="market-tabs">
+        <button class="tab-btn active" data-tab="browse">Browse</button>
+        <button class="tab-btn" data-tab="mylistings">My Listings</button>
+      </div>
+
+      <div id="browse-tab" class="tab-content">
+        <div id="market-list" class="card-list">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <div id="mylistings-tab" class="tab-content hidden">
+        <div id="my-listings" class="card-list">
+          <div class="empty-state"><p>No active listings</p></div>
+        </div>
+        <button id="btn-list-current" class="btn btn-secondary full" disabled>List Current Model</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Bottom XR Controls -->
   <div id="bottom-bar">
     <div class="stats">
       <span id="objects-count">1 Hologram</span>
@@ -113,7 +154,6 @@
       <button id="btn-enter-ar" class="btn btn-ar">Enter AR</button>
       <button id="btn-enter-vr" class="btn btn-vr">Enter VR</button>
     </div>
-    <p class="ar-hint">AR works best on Android Chrome / Quest browser</p>
   </div>
 
   <div id="toast-container"></div>

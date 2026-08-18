@@ -1,96 +1,48 @@
 # VR 3D NFT Scanner
 
-**Scan real-world objects → turn them into tradeable 3D NFTs, holograms, pics & videos.**
+**Scan real objects → Turn them into 3D holograms → Mint as NFTs → View in AR/VR → Buy, sell & trade**
 
-This repository contains the foundation for a VR / WebXR application that lets users:
+Live demo: **https://hartensteindominic.github.io/vr-3d-nft-scanner/**
 
-1. Scan physical objects (phone LiDAR / photogrammetry)
-2. Convert them into optimized 3D models (GLB)
-3. Mint them as NFTs
-4. View and interact with them as floating holograms in VR
-5. Buy, sell, and trade them in an in-app marketplace
+## Features
 
-## 🚀 Live Demo
+- **Beautiful immersive gallery** with floating holograms
+- **Real WebXR AR** – place holograms in the real world (hit-testing)
+- **VR mode** for headsets
+- **Scan / Upload** pipeline (Polycam, Scaniverse, or any GLB)
+- **IPFS upload** (Pinata) + metadata generation
+- **Smart contract minting** (Polygon Amoy / Mainnet ready)
+- **Personal Library** of your 3D NFTs
+- **Marketplace** – list, buy, sell & trade
+- **AI Description Helper** – generates strong NFT descriptions
+- Wallet connection (MetaMask etc.)
 
-Once GitHub Pages is enabled (see below), the site will be available at:
+## Quick Start
 
-**https://hartensteindominic.github.io/vr-3d-nft-scanner/**
+1. Open the live site or run locally:
+   ```bash
+   npx serve .
+   ```
+2. Connect wallet
+3. Upload a `.glb` or follow the guided scan steps
+4. Generate description (AI), upload to IPFS, mint
+5. View in AR or VR, manage in Library, list on Marketplace
 
-## Current Status
+## Making it fully live
 
-- ✅ **WebXR Prototype** – Interactive 3D hologram gallery (works in browser + Meta Quest browser)
-- ✅ **GitHub Pages ready** – Automatic deployment via Actions
-- ⏳ Smart contract + minting flow (next)
-- ⏳ Mobile scanning pipeline integration
-- ⏳ Full Unity XR version
-- ⏳ Marketplace smart contracts
+1. Get free Pinata API keys → put in `js/config.js`
+2. Deploy `contracts/VRHologramNFT.sol` on Remix (Polygon Amoy)
+3. Paste contract address into `js/config.js`
+4. Reload and mint for real
 
-## How to Deploy / Enable the Live Site (1 minute)
+## Tech
 
-1. Go to the repository: https://github.com/hartensteindominic/vr-3d-nft-scanner
-2. Click **Settings** → **Pages** (left sidebar)
-3. Under **Build and deployment** → **Source**, select **GitHub Actions**
-4. Save
-
-After the next push (or manually run the workflow), the site will be live at:
-
-→ **https://hartensteindominic.github.io/vr-3d-nft-scanner/**
-
-You can also trigger a deploy manually: **Actions** tab → **Deploy to GitHub Pages** → **Run workflow**
-
-## Tech Stack (MVP)
-
-| Layer              | Technology                          |
-|--------------------|-------------------------------------|
-| VR / Viewer        | Three.js + WebXR                    |
-| 3D Format          | GLB / glTF                          |
-| Blockchain (planned)| Polygon / Solana / Hedera          |
-| Storage (planned)  | IPFS (Pinata) + Arweave             |
-| Wallet             | WalletConnect / MetaMask            |
-| Future Full VR     | Unity + XR Interaction Toolkit      |
-
-## Project Structure
-
-```
-vr-3d-nft-scanner/
-├── index.html          # Main WebXR entry point
-├── css/
-│   └── style.css
-├── js/
-│   └── app.js          # Three.js + WebXR logic
-├── .github/workflows/
-│   └── deploy.yml      # Auto-deploy to GitHub Pages
-├── contracts/          # (coming) Solidity smart contracts
-└── README.md
-```
-
-## How to Run Locally
-
-```bash
-# Simple static server (required for WebXR in most browsers)
-npx serve .
-# or
-python -m http.server 8000
-```
-
-Then open `http://localhost:8000` and click **Enter VR** (or use a Quest browser).
-
-## Roadmap
-
-- [x] WebXR hologram gallery prototype
-- [x] GitHub Pages deployment
-- [ ] Wallet connection + display owned NFTs
-- [ ] IPFS upload + minting flow
-- [ ] Simple marketplace (list / buy)
-- [ ] Phone scanning integration (Polycam / Scaniverse / custom ARKit)
-- [ ] Unity XR version for full immersion
-- [ ] Gaussian Splatting support
-
-## Contributing
-
-This is an early-stage open project. PRs and ideas welcome!
+- Three.js + WebXR (AR + VR)
+- ethers.js
+- IPFS via Pinata
+- ERC-721 (OpenZeppelin style)
+- Pure frontend (GitHub Pages)
 
 ---
 
-Built for the future of spatial ownership.  
-Scan the real world. Own the digital twin.
+Scan the real world. Own the digital twin. Trade the hologram.
