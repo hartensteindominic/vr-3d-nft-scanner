@@ -20,7 +20,8 @@ async function getClient(){
    dapp:{name:'HyperStream 3D NFT Studio',url:'https://hartensteindominic.github.io/vr-3d-nft-scanner/'},
    analytics:{enabled:false},
    ui:{showInstallModal:false},
-   api:{supportedNetworks:[{chainId:'0xaa36a7',chainName:'Sepolia',rpcUrls:[rpc],nativeCurrency:{name:'Sepolia Ether',symbol:'ETH',decimals:18},blockExplorerUrls:['https://sepolia.etherscan.io']}]} 
+   supportedNetworks:[{chainId:'0xaa36a7',chainName:'Sepolia',rpcUrls:[rpc],nativeCurrency:{name:'Sepolia Ether',symbol:'ETH',decimals:18},blockExplorerUrls:['https://sepolia.etherscan.io']}],
+   api:{}
  });
  return evmClient;
 }
