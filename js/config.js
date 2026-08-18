@@ -1,1 +1,0 @@
-export const CONFIG={contractAddress:'',pinataJwt:'',pinataApiKey:'',pinataSecretKey:'',chain:'polygon'};
