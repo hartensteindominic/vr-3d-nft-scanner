@@ -1,58 +1,73 @@
-# 🌌 HyperStream 3D NFT Studio
+# 🌌 HyperStream
 
-**Create → Mint → Share interactive 3D NFTs from your browser.**
+# **Make it yours. ✦**
 
-[🚀 Launch HyperStream](https://hartensteindominic.github.io/vr-3d-nft-scanner/)
+A cute, futuristic creator studio for turning **photos and videos into on-chain digital creations**.
 
-HyperStream is a browser-first 3D NFT studio built for **iPhone, desktop, and Meta Quest**. Load a GLB, preview it in 3D, upload the asset to IPFS, connect MetaMask, and mint on Sepolia.
+urlLaunch HyperStreamhttps://hartensteindominic.github.io/vr-3d-nft-scanner/
 
-## ⚡ What it does
+## ✦ The experience
 
-- 🧊 Interactive GLB / GLTF / USDZ preview
-- ☁️ IPFS asset + metadata pipeline
-- 🦊 MetaMask wallet connection
-- ⛓️ Sepolia NFT minting
-- 🔗 On-chain transaction confirmation
-- 🌐 Shareable 3D NFT viewer
-- 🥽 Quest-friendly browser experience
-- 📱 iPhone + desktop support
+**CAPTURE → IPFS → CID → WALLET → MINT → SHARE → EXPLORE**
 
-## 🚀 The loop
+No scan is required to mint. A creator can simply take a photo, record a video, or choose media from their device, save it to IPFS, receive a CID, connect a wallet, and mint the resulting metadata on-chain.
 
-**CREATE → MINT → SHARE → DISCOVER → CREATE**
+## 🫧 Creator Studio
 
-The goal is simple: make a 3D collectible, put it on-chain, send someone a link, and let them experience the object directly in the browser.
+- 📸 Take photos from supported mobile browsers
+- 🎥 Record videos from supported mobile browsers
+- 🖼️ Choose existing media
+- ☁️ Upload media to IPFS
+- 🧬 Display the media CID and metadata URI
+- ✍️ NFT name, creator, description, and attributes
+- ✦ Live floating media preview
+- 🪐 Spatial / holographic visual interface
+- 📱 Mobile-first controls
+- 🥽 Quest-friendly interaction targets
 
-## 🧪 Network
+## ⛓️ Minting
 
-Current minting environment: **Ethereum Sepolia testnet**.
+- 🦊 Browser wallet connection
+- 🌐 Ethereum Sepolia network detection
+- 💎 Metadata stored through the IPFS pipeline
+- ✦ User-confirmed mint transaction
+- 🔍 Transaction hash + explorer link
+- 📋 Copy transaction hash
+- 🛡️ No silent minting
 
-Contract:
+Current testnet contract:
 
 `0x6ebd920e2383e11a06440ed632c51225b5f1909b`
 
-> Testnet only. Do not send real funds to the test contract.
+> **Testnet only.** Do not send real funds to the test contract.
 
-## 🛠️ Tech
+## 🌌 Product direction
 
-Three.js / Model Viewer · EIP-1193 · EIP-6963 · MetaMask · IPFS · Ethereum · GitHub Pages · Vercel
+HyperStream is evolving toward a complete spatial creation universe:
 
-## 🗺️ Roadmap
+**CREATE** · **COLLECT** · **DISPLAY** · **SHARE** · **SELL** · **VR**
 
-- [x] Browser 3D preview
-- [x] MetaMask connection
-- [x] IPFS upload pipeline
-- [x] Sepolia minting
-- [x] On-chain confirmation UI
-- [x] Shareable 3D viewer foundation
-- [ ] Creator profiles
-- [ ] Marketplace discovery
-- [ ] Spatial Quest mode
-- [ ] Creator analytics
-- [ ] Mainnet-ready production deployment
+Planned layers include creator profiles, collections, 3D/GLB experiences, spatial galleries, marketplace discovery, favorites, offers, provenance, digital drops, creator analytics, generative collections, spatial audio, and immersive Quest experiences.
 
-## 📣 Releases
+## 🤖 Promotion
 
-HyperStream uses GitHub Actions to prepare release announcements automatically. Configure repository secrets for the social networks you want to publish to.
+Release announcements can be automated through GitHub Actions for supported social networks. Promotion is intended for meaningful releases and milestones, not every commit.
 
-**Build once. Ship everywhere.**
+## 🛠️ Stack
+
+HTML/CSS/JavaScript · Ethers · EIP-1193 wallets · IPFS · Ethereum · Vercel API routes · GitHub Pages · WebXR-ready UI
+
+## 📁 Repository structure
+
+- `creator-v8.html` · current creator experience
+- `marketplace*.html` · marketplace experiments
+- `share.html` · share experience
+- `api/` · upload, signing, metadata, and media services
+- `contracts/` · NFT and marketplace contracts
+- `.github/workflows/` · release promotion automation
+
+## ✦ Product principle
+
+> **Make it yours.**
+>
+> Capture something real. Give it a world.
