@@ -2,27 +2,22 @@
  * Quest/desktop without the extension: MetaMask Connect uses QR + relay.
  * iPhone browser: MetaMask Connect uses the MetaMask Mobile deeplink.
  * Inside MetaMask Mobile: use the injected provider directly.
- *
- * Uses the current MetaMask Connect EVM API. EVM clients do not need the
- * legacy supportedNetworks initialization that caused the previous error.
  */
 let evmClient=null;
 const $=id=>document.getElementById(id);
 function status(t,e=false){const x=$('status');if(x){x.textContent=t;x.className='status'+(e?' error':'')}const w=$('walletStatus');if(w){w.textContent=t;w.className='walletstatus'+(e?' error':'')}}
-function setConnected(b,a,provider){
-  window.walletProvider=provider;window.walletAddress=a;window.hyperstreamSetWallet?.(a);
-  if(b){b.disabled=false;b.textContent='🟢 WALLET CONNECTED'}
-  status('🟢 MetaMask connected ✓');
-}
+function setConnected(b,a,provider){window.walletProvider=provider;window.walletAddress=a;window.hyperstreamSetWallet?.(a);if(b){b.disabled=false;b.textContent='🟢 WALLET CONNECTED'}status('🟢 MetaMask connected ✓')}
 async function getClient(){
   if(evmClient)return evmClient;
   status('Loading MetaMask…');
-  const mod=await import('https://esm.sh/@metamask/connect-evm?bundle');
+  const mod=await import('https://esm.sh/@metamask/connect-evm@2.1.1?bundle');
   const createEVMClient=mod.createEVMClient;
   if(typeof createEVMClient!=='function')throw Error('MetaMask Connect could not load.');
   evmClient=await createEVMClient({
     dapp:{name:'HyperStream 3D NFT Studio',url:'https://hartensteindominic.github.io/vr-3d-nft-scanner/'},
-    analytics:{enabled:false}
+    api:{supportedNetworks:{'eip155:11155111':'https://ethereum-sepolia.publicnode.com'}},
+    analytics:{enabled:false},
+    ui:{showInstallModal:false}
   });
   return evmClient;
 }
@@ -52,7 +47,4 @@ async function connectWallet(){
   }
 }
 window.walletClient=null;window.walletProvider=null;window.walletSession=null;window.reownConnect=connectWallet;
-window.addEventListener('DOMContentLoaded',()=>{
-  const b=$('connectWalletBtn');
-  if(b){b.type='button';b.addEventListener('click',connectWallet)}
-});
+window.addEventListener('DOMContentLoaded',()=>{const b=$('connectWalletBtn');if(b){b.type='button';b.addEventListener('click',connectWallet)}});
