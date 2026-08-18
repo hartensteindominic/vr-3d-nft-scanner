@@ -1,1 +1,27 @@
-<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HyperStream V1</title><style>body{margin:0;background:#050711;color:white;font:16px system-ui;padding:32px}h1{color:#61f6ff}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.card{background:#10162a;border:1px solid #29405f;border-radius:18px;padding:16px}.orb{height:170px;display:grid;place-items:center;perspective:500px}.cube{width:80px;height:80px;background:linear-gradient(135deg,#61f6ff,#785cff);transform:rotateX(55deg) rotateZ(45deg);box-shadow:0 0 45px #61f6ff88}.price{font-weight:800;color:#61f6ff}button{border:0;border-radius:10px;padding:10px 14px;background:#785cff;color:#fff;font-weight:700}</style><h1>HYPERSTREAM // V1</h1><p>Minimal 3D NFT marketplace demo</p><div class="grid">AETHER BLOOM|0.42 MATIC|SCULPTURE;QUANTUM HABITAT|1.80 MATIC|WORLD;PRISM RUNNER|0.73 MATIC|AVATAR;VOID RELIC|2.40 MATIC|ARTIFACT;MOON ARCHIVE|0.96 MATIC|WORLD;CHROMATIC GHOST|0.58 MATIC|AVATAR</div><script>document.querySelector('.grid').innerHTML=document.querySelector('.grid').textContent.split(';').map(x=>{let[a,b,c]=x.split('|');return `<article class="card"><div class="orb"><div class="cube"></div></div><h2>${a}</h2><p>${c}</p><p class="price">${b}</p><button>VIEW 3D</button></article>`}).join('')</script>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HyperStream HGLM · V1</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#02040a;color:#eafcff;font:14px system-ui;overflow:hidden}canvas{position:fixed;inset:0;width:100%;height:100%;display:block}.hud{position:fixed;inset:0;pointer-events:none}.top{position:absolute;top:22px;left:26px;right:26px;display:flex;justify-content:space-between;align-items:center}.brand{font-weight:900;letter-spacing:.22em;font-size:15px}.brand i{color:#54f6ff;font-style:normal}.status{border:1px solid #54f6ff55;background:#06131bdd;border-radius:999px;padding:8px 13px;color:#6df8ff;font-size:11px;letter-spacing:.12em}.left{position:absolute;left:26px;top:100px;width:190px}.label{color:#6d8494;font-size:10px;letter-spacing:.2em;margin-bottom:10px}.readout{border-left:2px solid #54f6ff;padding:10px 13px;background:#071018aa;margin-bottom:12px}.readout b{display:block;font-size:21px}.bottom{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);display:flex;gap:10px;pointer-events:auto}.btn{border:1px solid #54f6ff88;background:#06141ccc;color:#dfffff;border-radius:10px;padding:12px 18px;font-weight:800;letter-spacing:.08em;cursor:pointer}.btn.primary{background:#54f6ff;color:#021016}.hint{position:absolute;right:26px;bottom:28px;text-align:right;color:#718692;font-size:11px}.scanline{position:absolute;left:0;right:0;height:1px;background:#54f6ff44;top:50%;box-shadow:0 0 18px #54f6ff;animation:sweep 3s linear infinite}@keyframes sweep{0%{top:18%}50%{top:82%}100%{top:18%}}
+</style>
+</head>
+<body>
+<canvas id="space"></canvas>
+<div class="hud">
+<div class="top"><div class="brand"><i>HYPER</i>STREAM / HGLM</div><div class="status" id="status">● READY TO SCAN</div></div>
+<div class="left"><div class="label">RECONSTRUCTION</div><div class="readout"><b id="vox">18,420</b>VOXELS</div><div class="readout"><b id="depth">0.00</b>DEPTH FIELD</div><div class="readout"><b id="quality">RGB / LUMA</b>INPUT</div></div>
+<div class="scanline"></div>
+<div class="bottom"><button class="btn primary" id="scan">START HOLOGRAM SCAN</button><button class="btn" id="reset">RESET</button></div>
+<div class="hint">V1 · HGLM PROTOTYPE<br>RGB → ESTIMATED DEPTH → VOXEL FIELD</div>
+</div>
+<script>
+const c=document.getElementById('space'),x=c.getContext('2d');let w,h,pts=[],running=false,t=0;
+function resize(){w=c.width=innerWidth*devicePixelRatio;h=c.height=innerHeight*devicePixelRatio;x.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);w=innerWidth;h=innerHeight;pts=[];for(let i=0;i<1100;i++){let a=Math.random()*Math.PI*2,r=Math.pow(Math.random(),.55)*Math.min(w,h)*.32;pts.push({a,r,z:Math.random()*2-1,s:Math.random()*2+1})}}resize();addEventListener('resize',resize);
+function draw(){t+=.008;x.clearRect(0,0,w,h);let cx=w/2,cy=h/2;let pulse=1+Math.sin(t*3)*.025;for(const p of pts){p.a+=.0018;let rr=p.r*pulse;let px=cx+Math.cos(p.a+t*.15)*rr;let py=cy+Math.sin(p.a+t*.15)*rr*.64;let z=(Math.sin(p.a*3+t)+p.z)*.5;let size=p.s*(1+z*.7);x.fillStyle=`rgba(84,246,255,${.22+.55*(z+1)/2})`;x.fillRect(px,py,size,size)}x.beginPath();x.arc(cx,cy,Math.min(w,h)*.24,0,Math.PI*2);x.strokeStyle='rgba(84,246,255,.13)';x.stroke();requestAnimationFrame(draw)}draw();
+let n=18420;document.getElementById('scan').onclick=()=>{running=!running;document.getElementById('status').textContent=running?'● RECONSTRUCTING':'● SCAN PAUSED';document.getElementById('scan').textContent=running?'CAPTURE / FUSE':'START HOLOGRAM SCAN'};document.getElementById('reset').onclick=()=>{running=false;n=18420;document.getElementById('status').textContent='● READY TO SCAN';document.getElementById('scan').textContent='START HOLOGRAM SCAN';document.getElementById('vox').textContent=n.toLocaleString();document.getElementById('depth').textContent='0.00'};setInterval(()=>{if(running){n+=Math.floor(Math.random()*850+120);document.getElementById('vox').textContent=n.toLocaleString();document.getElementById('depth').textContent=(Math.sin(Date.now()/700)*.5+.5).toFixed(2)}},180);
+</script>
+</body>
+</html>
