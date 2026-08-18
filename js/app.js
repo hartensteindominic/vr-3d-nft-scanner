@@ -4,10 +4,12 @@ import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFa
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ethers } from 'ethers';
+import { CONFIG } from './config.js';
+import { uploadToIPFS, uploadMetadata, buildMetadata } from './ipfs.js';
 
 // ============================================================
-// VR 3D NFT Scanner – Full Integration Prototype
-// Scan real objects → Upload GLB → View as Hologram → Mint NFT
+// VR 3D NFT Scanner – Full Integration
+// Real-world scan → GLB → IPFS → Smart Contract Mint
 // ============================================================
 
 let camera, scene, renderer, controls;
@@ -15,14 +17,24 @@ let controller1, controller2;
 let raycaster;
 let holograms = [];
 let currentModel = null;
-let currentModelData = null; // { name, blob/url, size, ... }
+let currentModelData = null;
 
-// Wallet state
+// Wallet
 let provider = null;
 let signer = null;
 let userAddress = null;
+let contract = null;
 
-// DOM refs
+// Minimal ABI for our contract
+const CONTRACT_ABI = [
+  "function mintHologram(address to, string memory uri) public returns (uint256)",
+  "function tokenURI(uint256 tokenId) view returns (string)",
+  "function totalSupply() view returns (uint256)",
+  "function balanceOf(address owner) view returns (uint256)",
+  "function ownerOf(uint256 tokenId) view returns (address)",
+  "event HologramMinted(address indexed to, uint256 indexed tokenId, string tokenURI)"
+];
+
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
@@ -30,7 +42,7 @@ initThree();
 initUI();
 animate();
 
-// -------------------- THREE.JS / WEBXR --------------------
+// -------------------- THREE.JS --------------------
 function initThree() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x050508);
@@ -39,7 +51,6 @@ function initThree() {
   camera = new THREE.PerspectiveCamera(70, 1, 0.1, 100);
   camera.position.set(0, 1.6, 3.5);
 
-  // Lights
   scene.add(new THREE.AmbientLight(0x404060, 0.5));
   const dir = new THREE.DirectionalLight(0xa78bfa, 1.1);
   dir.position.set(5, 10, 7);
@@ -48,28 +59,23 @@ function initThree() {
   point.position.set(-4, 2, -2);
   scene.add(point);
 
-  // Floor
   const floor = new THREE.Mesh(
     new THREE.CircleGeometry(8, 64),
     new THREE.MeshStandardMaterial({ color: 0x0c0c16, metalness: 0.4, roughness: 0.6, transparent: true, opacity: 0.9 })
   );
   floor.rotation.x = -Math.PI / 2;
-  floor.receiveShadow = true;
   scene.add(floor);
 
   const grid = new THREE.GridHelper(16, 32, 0x7c3aed, 0x1a1a2e);
   grid.position.y = 0.01;
   scene.add(grid);
 
-  // Renderer
   const container = $('#viewport-container');
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.xr.enabled = true;
-  renderer.shadowMap.enabled = true;
   container.appendChild(renderer.domElement);
 
-  // Size
   function resize() {
     const w = container.clientWidth;
     const h = container.clientHeight;
@@ -84,13 +90,11 @@ function initThree() {
   controls.target.set(0, 1.1, 0);
   controls.enableDamping = true;
 
-  // VR Button (hidden, we trigger our own)
   const vrBtn = VRButton.createButton(renderer);
   vrBtn.style.display = 'none';
   document.body.appendChild(vrBtn);
   $('#btn-enter-vr').addEventListener('click', () => vrBtn.click());
 
-  // Controllers
   const factory = new XRControllerModelFactory();
   controller1 = renderer.xr.getController(0);
   controller1.addEventListener('selectstart', onSelectStart);
@@ -110,19 +114,16 @@ function initThree() {
 
   raycaster = new THREE.Raycaster();
 
-  // Default sample hologram
   loadHologramFromURL(
     'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF-Binary/Duck.glb',
     new THREE.Vector3(0, 1.15, -1.8),
     'Sample Duck (Demo)'
   );
 
-  // Platforms
   createPlatform(new THREE.Vector3(-2.5, 0, -1.5));
   createPlatform(new THREE.Vector3(2.5, 0, -1.5));
   createPlatform(new THREE.Vector3(0, 0, -3.2));
 
-  // Hide loading
   setTimeout(() => {
     const overlay = $('#loading-overlay');
     if (overlay) overlay.style.display = 'none';
@@ -152,56 +153,36 @@ function createPlatform(pos) {
 
 function loadHologramFromURL(url, position, name) {
   const loader = new GLTFLoader();
-  loader.load(url, (gltf) => {
-    addHologramToScene(gltf.scene, position, name);
-  }, undefined, (err) => {
-    console.error(err);
-    toast('Failed to load model', 'error');
-  });
+  loader.load(url, (gltf) => addHologramToScene(gltf.scene, position, name));
 }
 
 function loadHologramFromFile(file) {
   const url = URL.createObjectURL(file);
   const loader = new GLTFLoader();
   loader.load(url, (gltf) => {
-    // Clear previous user model if any
     if (currentModel) {
       scene.remove(currentModel);
       holograms = holograms.filter(h => h !== currentModel);
     }
     currentModel = addHologramToScene(gltf.scene, new THREE.Vector3(0, 1.2, -1.5), file.name);
-    currentModelData = {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      url: url,
-      file
-    };
+    currentModelData = { name: file.name, size: file.size, type: file.type, url, file };
     updateModelInfo();
     $('#btn-prepare-mint').disabled = false;
     $('#btn-clear-model').classList.remove('hidden');
-    toast('Model loaded successfully', 'success');
-  }, undefined, (err) => {
-    console.error(err);
-    toast('Could not parse GLB/GLTF file', 'error');
-  });
+    toast('Model loaded – ready for IPFS + mint', 'success');
+  }, undefined, () => toast('Could not parse GLB/GLTF', 'error'));
 }
 
 function addHologramToScene(model, position, name) {
   model.position.copy(position);
-  // Auto scale roughly to reasonable size
   const box = new THREE.Box3().setFromObject(model);
   const size = box.getSize(new THREE.Vector3());
   const maxDim = Math.max(size.x, size.y, size.z);
-  if (maxDim > 0) {
-    const scale = 1.2 / maxDim;
-    model.scale.setScalar(scale);
-  }
+  if (maxDim > 0) model.scale.setScalar(1.2 / maxDim);
 
   model.traverse((c) => {
     if (c.isMesh) {
       c.castShadow = true;
-      c.receiveShadow = true;
       if (c.material) {
         c.material.transparent = true;
         c.material.opacity = 0.93;
@@ -261,9 +242,8 @@ function animate() {
   });
 }
 
-// -------------------- UI LOGIC --------------------
+// -------------------- UI --------------------
 function initUI() {
-  // Mode tabs
   $$('.mode-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       $$('.mode-btn').forEach(b => b.classList.remove('active'));
@@ -275,7 +255,6 @@ function initUI() {
     });
   });
 
-  // Guided scan steps animation
   $('#btn-start-scan-guide')?.addEventListener('click', () => {
     const steps = $$('.step');
     let i = 0;
@@ -287,50 +266,41 @@ function initUI() {
         i++;
       } else {
         clearInterval(interval);
-        toast('Now open Polycam / Scaniverse, scan your object, export GLB, then come back and use Upload', 'info');
+        toast('Scan with Polycam/Scaniverse → Export GLB → Upload here', 'info');
       }
-    }, 1600);
+    }, 1500);
   });
 
-  // Drag & drop + file input
   const dropZone = $('#drop-zone');
   const fileInput = $('#file-input');
-
   dropZone?.addEventListener('click', () => fileInput.click());
   dropZone?.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
   dropZone?.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
   dropZone?.addEventListener('drop', (e) => {
     e.preventDefault();
     dropZone.classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
   });
   fileInput?.addEventListener('change', () => {
     if (fileInput.files[0]) handleFile(fileInput.files[0]);
   });
 
   $('#btn-clear-model')?.addEventListener('click', clearCurrentModel);
-
-  // Wallet
   $('#btn-connect')?.addEventListener('click', connectWallet);
-
-  // Mint flow
-  $('#btn-prepare-mint')?.addEventListener('click', prepareMint);
+  $('#btn-prepare-mint')?.addEventListener('click', prepareAndUpload);
   $('#btn-mint')?.addEventListener('click', mintNFT);
-
-  // Modal
   $('#modal-close')?.addEventListener('click', () => $('#modal-overlay').classList.add('hidden'));
 }
 
 function handleFile(file) {
-  if (!file.name.toLowerCase().endsWith('.glb') && !file.name.toLowerCase().endsWith('.gltf')) {
+  if (!file.name.toLowerCase().match(/\.(glb|gltf)$/)) {
     toast('Please upload a .glb or .gltf file', 'error');
     return;
   }
   const status = $('#upload-status');
   status.classList.remove('hidden');
   status.className = 'status-box info';
-  status.textContent = `Loading ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)...`;
+  status.textContent = `Loading ${file.name}...`;
   loadHologramFromFile(file);
 }
 
@@ -340,11 +310,7 @@ function updateModelInfo() {
     el.innerHTML = '<p class="empty">No model loaded yet</p>';
     return;
   }
-  el.innerHTML = `
-    <strong>${currentModelData.name}</strong><br/>
-    Size: ${(currentModelData.size/1024).toFixed(1)} KB<br/>
-    Ready for minting
-  `;
+  el.innerHTML = `<strong>${currentModelData.name}</strong><br/>Size: ${(currentModelData.size/1024).toFixed(1)} KB<br/>Ready for IPFS + mint`;
 }
 
 function clearCurrentModel() {
@@ -366,10 +332,10 @@ function updateStats() {
   $('#objects-count').textContent = `${holograms.length} Hologram${holograms.length !== 1 ? 's' : ''}`;
 }
 
-// -------------------- WALLET + CRYPTO --------------------
+// -------------------- WALLET --------------------
 async function connectWallet() {
   if (!window.ethereum) {
-    toast('Please install MetaMask or another web3 wallet', 'error');
+    toast('Install MetaMask or another web3 wallet', 'error');
     return;
   }
   try {
@@ -378,14 +344,16 @@ async function connectWallet() {
     signer = await provider.getSigner();
     userAddress = await signer.getAddress();
 
-    // Try switch to Polygon Amoy testnet (optional)
+    // Switch to Amoy if possible
     try {
       await window.ethereum.request({
         method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0x13882' }] // Amoy
+        params: [{ chainId: '0x13882' }]
       });
-    } catch (switchErr) {
-      // User may reject or network not added – continue anyway
+    } catch (_) {}
+
+    if (CONFIG.contractAddress) {
+      contract = new ethers.Contract(CONFIG.contractAddress, CONTRACT_ABI, signer);
     }
 
     $('#btn-connect').classList.add('hidden');
@@ -395,52 +363,70 @@ async function connectWallet() {
     refreshCollection();
   } catch (err) {
     console.error(err);
-    toast('Wallet connection failed', 'error');
+    toast('Connection failed', 'error');
   }
 }
 
 function refreshCollection() {
   const list = $('#collection-list');
-  // Placeholder – in production query your contract / indexer
-  list.innerHTML = `
-    <div class="collection-item">
-      <div class="thumb"></div>
-      <div>
-        <strong>Demo Collection</strong><br/>
-        <span class="small">Connect + mint to see real items</span>
-      </div>
-    </div>
-  `;
+  list.innerHTML = `<div class="collection-item"><div class="thumb"></div><div><strong>Your NFTs</strong><br/><span class="small">Will appear here after minting</span></div></div>`;
 }
 
-// -------------------- MINT FLOW --------------------
-async function prepareMint() {
-  if (!currentModelData) {
+// -------------------- IPFS + MINT --------------------
+async function prepareAndUpload() {
+  if (!currentModelData?.file) {
     toast('Load a model first', 'error');
     return;
   }
+
   const name = $('#nft-name').value.trim() || currentModelData.name;
-  const desc = $('#nft-desc').value.trim() || 'Real-world scanned 3D object minted as NFT';
-
-  // In a real app we would:
-  // 1. Upload GLB to IPFS (Pinata / web3.storage / NFT.Storage)
-  // 2. Create metadata JSON and upload that too
-  // 3. Get the tokenURI
-
+  const desc = $('#nft-desc').value.trim() || 'Real-world scanned 3D object minted as hologram NFT';
   const status = $('#mint-status');
   status.classList.remove('hidden');
   status.className = 'status-box info';
-  status.innerHTML = `
-    <strong>Metadata prepared</strong><br/>
-    Name: ${name}<br/>
-    Description: ${desc.slice(0,60)}...<br/>
-    <br/>
-    Next: Upload model + metadata to IPFS, then call mint on the smart contract.
-    (Full IPFS + contract integration coming in next update)
-  `;
+  status.innerHTML = 'Uploading model to IPFS...';
 
-  $('#btn-mint').disabled = false;
-  toast('Metadata ready – you can now mint (demo mode)', 'success');
+  try {
+    // 1. Upload the GLB
+    const modelUpload = await uploadToIPFS(currentModelData.file, currentModelData.name);
+    status.innerHTML = modelUpload.demo
+      ? `Demo mode: fake model CID <code>${modelUpload.cid}</code><br/>Add Pinata keys in js/config.js for real upload.`
+      : `Model uploaded: <code>${modelUpload.cid}</code>`;
+
+    // 2. Build + upload metadata
+    status.innerHTML += '<br/>Uploading metadata...';
+    const metadata = buildMetadata({
+      name,
+      description: desc,
+      modelCid: modelUpload.cid
+    });
+    const metaUpload = await uploadMetadata(metadata);
+
+    // Store for mint step
+    currentModelData.ipfs = {
+      modelCid: modelUpload.cid,
+      metadataCid: metaUpload.cid,
+      tokenURI: metaUpload.demo ? `ipfs://${metaUpload.cid}` : `ipfs://${metaUpload.cid}`,
+      demo: modelUpload.demo || metaUpload.demo
+    };
+
+    status.className = 'status-box success';
+    status.innerHTML = `
+      <strong>Ready to mint</strong><br/>
+      Model CID: <code>${modelUpload.cid}</code><br/>
+      Metadata CID: <code>${metaUpload.cid}</code><br/>
+      tokenURI: ipfs://${metaUpload.cid}<br/>
+      ${metaUpload.demo ? '<br/><em>Demo mode – add Pinata API keys + contract address for real mint</em>' : ''}
+    `;
+
+    $('#btn-mint').disabled = false;
+    toast('IPFS upload complete – you can mint now', 'success');
+  } catch (err) {
+    console.error(err);
+    status.className = 'status-box error';
+    status.textContent = 'IPFS upload failed: ' + err.message;
+    toast('IPFS upload failed', 'error');
+  }
 }
 
 async function mintNFT() {
@@ -448,33 +434,53 @@ async function mintNFT() {
     toast('Connect wallet first', 'error');
     return;
   }
-  if (!currentModelData) {
-    toast('No model loaded', 'error');
+  if (!currentModelData?.ipfs) {
+    toast('Run Prepare / Upload first', 'error');
     return;
   }
 
   const status = $('#mint-status');
   status.classList.remove('hidden');
   status.className = 'status-box info';
-  status.textContent = 'Minting (demo)... In production this would call your ERC-721 contract.';
 
-  // DEMO: simulate mint
-  setTimeout(() => {
-    status.className = 'status-box success';
-    status.innerHTML = `
-      <strong>Demo Mint Successful</strong><br/>
-      This is a simulation. Real version will:<br/>
-      1. Upload GLB → IPFS<br/>
-      2. Upload metadata JSON → IPFS<br/>
-      3. Call contract.mint(to, tokenURI)<br/>
-      4. Show the new NFT in your collection
-    `;
-    toast('Demo mint complete – real contract integration next', 'success');
-    refreshCollection();
-  }, 1800);
+  // Real mint if contract is configured
+  if (CONFIG.contractAddress && contract && !currentModelData.ipfs.demo) {
+    try {
+      status.textContent = 'Sending mint transaction...';
+      const tx = await contract.mintHologram(userAddress, currentModelData.ipfs.tokenURI);
+      status.textContent = 'Waiting for confirmation...';
+      const receipt = await tx.wait();
+      status.className = 'status-box success';
+      status.innerHTML = `
+        <strong>Minted successfully!</strong><br/>
+        Tx: <a href="${CONFIG.blockExplorer}/tx/${receipt.hash}" target="_blank" rel="noopener">${receipt.hash.slice(0,12)}...</a>
+      `;
+      toast('NFT minted on-chain!', 'success');
+      refreshCollection();
+      return;
+    } catch (err) {
+      console.error(err);
+      status.className = 'status-box error';
+      status.textContent = 'Mint failed: ' + (err.reason || err.message);
+      toast('Mint failed', 'error');
+      return;
+    }
+  }
+
+  // Demo path
+  status.className = 'status-box success';
+  status.innerHTML = `
+    <strong>Demo Mint Complete</strong><br/>
+    tokenURI: ${currentModelData.ipfs.tokenURI}<br/><br/>
+    To go live:<br/>
+    1. Get free Pinata keys → put in <code>js/config.js</code><br/>
+    2. Deploy <code>contracts/VRHologramNFT.sol</code> on Remix (Amoy)<br/>
+    3. Paste contract address into <code>js/config.js</code><br/>
+    4. Reload and mint for real
+  `;
+  toast('Demo mint done – follow steps for real on-chain mint', 'success');
 }
 
-// -------------------- HELPERS --------------------
 function toast(msg, type = 'info') {
   const container = $('#toast-container');
   const el = document.createElement('div');
@@ -483,8 +489,7 @@ function toast(msg, type = 'info') {
   if (type === 'success') el.style.borderColor = 'var(--success)';
   if (type === 'error') el.style.borderColor = 'var(--danger)';
   container.appendChild(el);
-  setTimeout(() => el.remove(), 4200);
+  setTimeout(() => el.remove(), 4500);
 }
 
-// Expose for debugging
-window.__scanner = { scene, holograms, currentModelData, loadHologramFromFile };
+window.__scanner = { scene, holograms, currentModelData, CONFIG };
