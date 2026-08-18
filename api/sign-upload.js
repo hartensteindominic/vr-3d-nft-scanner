@@ -1,6 +1,7 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
   if (!process.env.PINATA_JWT) return res.status(500).json({ error: 'PINATA_JWT is not configured on Vercel.' });
@@ -10,10 +11,7 @@ export default async function handler(req, res) {
     const now = Math.floor(Date.now() / 1000);
     const response = await fetch('https://uploads.pinata.cloud/v3/files/sign', {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.PINATA_JWT}`,
-        'Content-Type': 'application/json'
-      },
+      headers: { Authorization: `Bearer ${process.env.PINATA_JWT}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         date: now,
         expires: 1800,
@@ -26,7 +24,9 @@ export default async function handler(req, res) {
     const text = await response.text();
     if (!response.ok) return res.status(502).json({ error: 'Pinata could not create the upload URL.', details: text.slice(0, 1000) });
     const data = JSON.parse(text);
-    return res.status(200).json({ url: data.data, filename });
+    const url = typeof data?.data === 'string' ? data.data : data?.data?.url || data?.url;
+    if (!url) return res.status(502).json({ error: 'Pinata returned no signed upload URL.', details: text.slice(0, 1000) });
+    return res.status(200).json({ url, filename });
   } catch (error) {
     return res.status(500).json({ error: error?.message || 'Could not create upload URL.' });
   }
