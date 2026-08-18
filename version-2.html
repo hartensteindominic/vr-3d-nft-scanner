@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>HyperStream // VERSION 02</title>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#02030a;color:#fff;font-family:Inter,system-ui,sans-serif}#space{position:fixed;inset:0}canvas{display:block}.hud{position:fixed;inset:0;pointer-events:none}.top{position:absolute;top:18px;left:20px;right:20px;display:flex;align-items:center;justify-content:space-between;pointer-events:auto}.logo{font-weight:1000;letter-spacing:3px;font-size:13px}.logo span{color:#72f5ff}.nav{display:flex;gap:8px}.nav button,.wallet{border:1px solid #ffffff22;background:#070a14d9;color:#fff;padding:10px 14px;border-radius:14px;font-weight:800;font-size:11px;backdrop-filter:blur(18px);cursor:pointer}.wallet{background:#fff;color:#03040a}.hero{position:absolute;left:5vw;top:25vh;max-width:500px}.kicker{font-size:10px;letter-spacing:4px;color:#72f5ff;font-weight:900}.hero h1{font-size:clamp(48px,7vw,94px);line-height:.86;letter-spacing:-6px;margin:14px 0}.hero p{color:#9da5bd;line-height:1.6;font-size:14px;max-width:420px}.hint{margin-top:24px;color:#727b92;font-size:10px;letter-spacing:1.5px}.panel{position:absolute;right:28px;bottom:28px;width:300px;padding:18px;border:1px solid #ffffff18;background:#050811cc;backdrop-filter:blur(25px);border-radius:22px;pointer-events:auto}.panel small{color:#667087}.panel h2{margin:5px 0;font-size:23px}.price{color:#72f5ff;font-weight:950}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:15px}.buttons button{border:0;border-radius:12px;padding:12px;font-weight:900;cursor:pointer}.buy{background:#fff}.sell{background:#151b2a;color:#fff;border:1px solid #ffffff18!important}.side{position:absolute;left:20px;bottom:25px;display:flex;gap:8px;pointer-events:auto}.side button{border:1px solid #ffffff18;background:#070a13d9;color:#9ca6bb;border-radius:12px;padding:10px 12px;font-size:10px;cursor:pointer}.badge{position:absolute;top:95px;left:50%;transform:translateX(-50%);padding:9px 13px;border-radius:99px;border:1px solid #ffffff1a;background:#070a12aa;color:#8791a8;font-size:9px;letter-spacing:2px;backdrop-filter:blur(14px)}@media(max-width:700px){.nav button{display:none}.hero{left:22px;top:17vh}.hero h1{font-size:54px}.panel{left:18px;right:18px;bottom:18px;width:auto}.side{display:none}.badge{top:80px}.hint{display:none}}
+</style>
+</head>
+<body>
+<div id="space"></div>
+<div class="hud">
+ <div class="top"><div class="logo"><span>◆</span> HYPERSTREAM / 02</div><div class="nav"><button>EXPLORE</button><button>CREATE</button><button>COLLECT</button><button class="wallet">CONNECT WALLET</button></div></div>
+ <div class="badge">IMMERSIVE ON-CHAIN GALLERY</div>
+ <section class="hero"><div class="kicker">THE NFT STORY IS NOW A SPACE</div><h1>WALK<br>THROUGH<br>THE ART.</h1><p>Version 02 turns the marketplace into a living digital gallery. Drift through collections, approach an artifact, inspect it in 3D, then own it.</p><div class="hint">DRAG TO LOOK · SCROLL TO FLY · TAP AN ARTIFACT</div></section>
+ <div class="side"><button>← COLLECTIONS</button><button>◎ RANDOM ART</button><button>⌘ MY VAULT</button></div>
+ <aside class="panel"><small>SELECTED ARTIFACT · 001</small><h2>NEON RELIC</h2><div class="price">1.25 ETH</div><div class="buttons"><button class="buy">BUY NOW</button><button class="sell">MAKE OFFER</button></div></aside>
+</div>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+const scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(0x02030a,.018);
+const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.1,500);camera.position.set(0,5,18);
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;document.querySelector('#space').appendChild(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.enablePan=false;controls.minDistance=5;controls.maxDistance=35;controls.maxPolarAngle=Math.PI*.78;
+scene.add(new THREE.AmbientLight(0x6e7cff,1.2));
+const cyan=new THREE.PointLight(0x45eaff,18,35);cyan.position.set(0,7,4);scene.add(cyan);const purple=new THREE.PointLight(0x8b5cff,14,30);purple.position.set(-12,3,-8);scene.add(purple);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(180,180),new THREE.MeshStandardMaterial({color:0x03050c,metalness:.65,roughness:.82}));floor.rotation.x=-Math.PI/2;floor.position.y=-3;scene.add(floor);
+const grid=new THREE.GridHelper(180,90,0x26304b,0x101729);grid.position.y=-2.98;scene.add(grid);
+const stars=new THREE.BufferGeometry();const pts=[];for(let i=0;i<1800;i++)pts.push((Math.random()-.5)*150,Math.random()*80-10,(Math.random()-.5)*150);stars.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));scene.add(new THREE.Points(stars,new THREE.PointsMaterial({color:0x9dbbff,size:.08,transparent:true,opacity:.65})));
+const colors=[0x52f3ff,0x9b63ff,0xff4fc8,0x5dffad,0xffb84d,0x7194ff];const items=[];
+function artifact(i){const g=new THREE.Group();const c=colors[i%colors.length];const geo=i%2?new THREE.IcosahedronGeometry(1.25,2):new THREE.TorusKnotGeometry(.9,.28,96,16);const m=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.45,metalness:.72,roughness:.2});const mesh=new THREE.Mesh(geo,m);g.add(mesh);const ring=new THREE.Mesh(new THREE.TorusGeometry(1.9,.018,8,96),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.6}));ring.rotation.x=Math.PI/2;g.add(ring);const light=new THREE.PointLight(c,5,9);g.add(light);g.position.set((i%4-1.5)*5,(i%3)*2.5-1.2,-Math.floor(i/4)*6-3);g.userData={name:['NEON RELIC','VOID BLOOM','CHROMA CORE','SYNTH ANGEL','STAR FORGE','QUANTUM MASK','AETHER NODE','DREAM ENGINE'][i],price:(.65+i*.12).toFixed(2)};scene.add(g);items.push(g)}
+for(let i=0;i<12;i++)artifact(i);
+const portal=new THREE.Mesh(new THREE.TorusGeometry(5,.06,12,128),new THREE.MeshBasicMaterial({color:0x65efff,transparent:true,opacity:.22}));portal.position.set(0,3,-22);portal.rotation.x=Math.PI/2;scene.add(portal);
+let t=0;function animate(){requestAnimationFrame(animate);t+=.006;items.forEach((g,i)=>{g.rotation.y+=.004+(i%3)*.001;g.position.y+=Math.sin(t*2+i)*.002});portal.rotation.z=t;controls.update();renderer.render(scene,camera)}animate();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script>
+</body></html>
