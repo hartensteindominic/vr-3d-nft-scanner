@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>HyperStream 3D</title>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.5/dist/ethers.umd.min.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#05060b;color:#f5f7ff;font:15px system-ui,sans-serif}main{max-width:900px;margin:auto;padding:18px}.hero,.panel{border:1px solid #263047;background:#0b101b;border-radius:20px;padding:20px;margin-bottom:14px}.hero h1{font-size:clamp(38px,8vw,72px);line-height:.9;margin:10px 0}.cyan{color:#64f6ff}.muted{color:#8791a7}.btn{border:1px solid #31405c;background:#111827;color:#fff;border-radius:12px;padding:13px 16px;font-weight:800}.primary{background:#64f6ff;color:#031016;border:0}.row{display:flex;gap:10px;flex-wrap:wrap}.upload{border:2px dashed #64f6ff55;border-radius:16px;padding:24px;text-align:center}.upload input{display:none}.upload label{display:inline-block;padding:14px 18px;border-radius:12px;background:#10202a;color:#bfffff;font-weight:900}.preview{height:330px;background:#05070c;border-radius:16px;margin:14px 0;overflow:hidden}.preview model-viewer{width:100%;height:100%}input{width:100%;padding:13px;border-radius:10px;border:1px solid #263047;background:#080c14;color:#fff}.status{margin-top:12px;white-space:pre-wrap;word-break:break-word;color:#71f7b0}.error{color:#ff8b8b}.small{font-size:12px}</style>
+</head>
+<body>
+<main>
+<section class="hero">
+<div class="cyan">HYPERSTREAM 3D · QUEST MODE</div>
+<h1>Turn a 3D file into an NFT.</h1>
+<p class="muted">Quest-friendly upload flow. The upload uses this same Vercel origin, so the VR browser does not need a cross-site request.</p>
+<div class="row"><button class="btn" id="walletBtn">CONNECT WALLET</button><span id="wallet" class="muted"></span></div>
+</section>
+<section class="panel">
+<h2>① Select your GLB</h2>
+<div class="upload"><label for="asset">SELECT GLB / GLTF / USDZ</label><input id="asset" type="file" accept=".glb,.gltf,.usdz,model/gltf-binary,model/gltf+json"><p id="fileStatus" class="muted">Choose a small GLB first for the Quest test.</p></div>
+<div class="preview"><model-viewer id="preview" camera-controls auto-rotate shadow-intensity="1"></model-viewer></div>
+<input id="name" placeholder="NFT name" value="My HyperObject">
+<br><br>
+<button class="btn primary" id="mintBtn">UPLOAD + MINT 3D NFT</button>
+<div id="status" class="status"></div>
+</section>
+<section class="panel small muted">Contract: 0x02f93c7547309ca50EEAB446DaEBE8ce8E694cBb · Sepolia</section>
+</main>
+<script>
+const CONTRACT='0x02f93c7547309ca50EEAB446DaEBE8ce8E694cBb';
+const ABI=['function mint(address to,string metadataURI) external returns(uint256)','function nextTokenId() external view returns(uint256)'];
+const asset=document.getElementById('asset'),preview=document.getElementById('preview'),fileStatus=document.getElementById('fileStatus'),status=document.getElementById('status'),nameInput=document.getElementById('name');
+let objectUrl='';
+function setStatus(text,error=false){status.textContent=text;status.className='status'+(error?' error':'');}
+asset.addEventListener('change',()=>{const f=asset.files?.[0];if(!f)return;if(!/\.(glb|gltf|usdz)$/i.test(f.name)){setStatus('Please choose a GLB, GLTF or USDZ.',true);return}if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(f);preview.src=objectUrl;fileStatus.textContent=f.name+' · '+(f.size/1048576).toFixed(2)+' MB';setStatus('3D file loaded locally ✓');});
+async function connect(){if(!window.ethereum){setStatus('No wallet provider detected in this browser. Open the page through MetaMask or a wallet-enabled browser.',true);return}try{const accounts=await ethereum.request({method:'eth_requestAccounts'});wallet.textContent=accounts[0].slice(0,8)+'…'+accounts[0].slice(-6);setStatus('Wallet connected ✓');}catch(e){setStatus(e.message||'Wallet connection failed.',true)}}
+document.getElementById('walletBtn').onclick=connect;
+function bytesToBase64(bytes){let out='';const chunk=0x8000;for(let i=0;i<bytes.length;i+=chunk)out+=String.fromCharCode(...bytes.subarray(i,i+chunk));return btoa(out)}
+async function upload(file){const bytes=new Uint8Array(await file.arrayBuffer());let response;try{response=await fetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:nameInput.value||file.name,description:'HyperStream 3D NFT created in Quest VR.',file:{name:file.name,type:file.type||'model/gltf-binary',data:bytesToBase64(bytes)}})});}catch(e){throw new Error('Quest could not reach the upload server. Refresh the page and try again.\nBrowser: '+(e.message||e))}
+const text=await response.text();let data;try{data=JSON.parse(text)}catch{throw new Error('Upload server returned HTTP '+response.status+' instead of JSON.\n'+text.slice(0,300))}if(!response.ok)throw new Error(data.error+(data.details?'\n'+data.details:''));return data}
+async function mint(){const f=asset.files?.[0];if(!f){setStatus('Select your GLB first.',true);return}if(f.size>4*1024*1024){setStatus('For Quest, start with a GLB under 4 MB.',true);return}if(!window.ethereum){setStatus('Open this page with MetaMask/wallet support first.',true);return}try{mintBtn.disabled=true;setStatus('1/3 Uploading GLB to IPFS…');const uploaded=await upload(f);setStatus('2/3 IPFS upload complete. Checking Sepolia wallet…');const provider=new ethers.BrowserProvider(window.ethereum);const network=await provider.getNetwork();if(network.chainId!==11155111n){await ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0xaa36a7'}]});}const signer=await provider.getSigner();const address=await signer.getAddress();const contract=new ethers.Contract(CONTRACT,ABI,signer);setStatus('3/3 Sending NFT mint transaction…\nWallet: '+address+'\nMetadata: '+uploaded.metadataUri);const tx=await contract.mint(address,uploaded.metadataUri);setStatus('Transaction sent. Waiting for confirmation…\n'+tx.hash);const receipt=await tx.wait();setStatus('🎉 3D NFT MINTED!\nTransaction: '+receipt.hash+'\nToken metadata: '+uploaded.metadataUri);}catch(e){console.error(e);setStatus('MINT FAILED\n'+(e?.shortMessage||e?.reason||e?.message||String(e)),true)}finally{mintBtn.disabled=false}}
+const mintBtn=document.getElementById('mintBtn');mintBtn.onclick=mint;
+</script>
+</body>
+</html>
