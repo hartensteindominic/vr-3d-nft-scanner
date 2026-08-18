@@ -1,0 +1,37 @@
+name: Auto-Post Release to Bluesky
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  bsky:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post Release to Bluesky
+        if: ${{ secrets.BLUESKY_IDENTIFIER != '' && secrets.BLUESKY_PASSWORD != '' }}
+        uses: myConsciousness/bluesky-post@v6
+        with:
+          text: |
+            🌌 HyperStream just evolved (${{ github.event.release.tag_name }}).
+
+            ${{ github.event.release.body }}
+
+            🥽 Quest · 📱 iPhone · 💻 Desktop
+            Create yours → https://hartensteindominic.github.io/vr-3d-nft-scanner/
+            Release → ${{ github.event.release.html_url }}
+          identifier: ${{ secrets.BLUESKY_IDENTIFIER }}
+          password: ${{ secrets.BLUESKY_PASSWORD }}
+
+      - name: Report configuration status
+        env:
+          BSKY_CONFIGURED: ${{ secrets.BLUESKY_IDENTIFIER != '' && secrets.BLUESKY_PASSWORD != '' }}
+        run: |
+          if [ "$BSKY_CONFIGURED" = "true" ]; then
+            echo "✅ HyperStream release promotion sent to Bluesky."
+          else
+            echo "ℹ️ Bluesky secrets are not configured yet. No post was sent."
+          fi
