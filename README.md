@@ -10,17 +10,33 @@ This repository contains the foundation for a VR / WebXR application that lets u
 4. View and interact with them as floating holograms in VR
 5. Buy, sell, and trade them in an in-app marketplace
 
+## 🚀 Live Demo
+
+Once GitHub Pages is enabled (see below), the site will be available at:
+
+**https://hartensteindominic.github.io/vr-3d-nft-scanner/**
+
 ## Current Status
 
 - ✅ **WebXR Prototype** – Interactive 3D hologram gallery (works in browser + Meta Quest browser)
+- ✅ **GitHub Pages ready** – Automatic deployment via Actions
 - ⏳ Smart contract + minting flow (next)
 - ⏳ Mobile scanning pipeline integration
 - ⏳ Full Unity XR version
 - ⏳ Marketplace smart contracts
 
-## Live Demo
+## How to Deploy / Enable the Live Site (1 minute)
 
-Open `index.html` in a WebXR-compatible browser (Chrome, Edge, or Meta Quest Browser) or host it.
+1. Go to the repository: https://github.com/hartensteindominic/vr-3d-nft-scanner
+2. Click **Settings** → **Pages** (left sidebar)
+3. Under **Build and deployment** → **Source**, select **GitHub Actions**
+4. Save
+
+After the next push (or manually run the workflow), the site will be live at:
+
+→ **https://hartensteindominic.github.io/vr-3d-nft-scanner/**
+
+You can also trigger a deploy manually: **Actions** tab → **Deploy to GitHub Pages** → **Run workflow**
 
 ## Tech Stack (MVP)
 
@@ -42,8 +58,9 @@ vr-3d-nft-scanner/
 │   └── style.css
 ├── js/
 │   └── app.js          # Three.js + WebXR logic
+├── .github/workflows/
+│   └── deploy.yml      # Auto-deploy to GitHub Pages
 ├── contracts/          # (coming) Solidity smart contracts
-├── scanning/           # (coming) Mobile scan → GLB pipeline notes
 └── README.md
 ```
 
@@ -61,6 +78,7 @@ Then open `http://localhost:8000` and click **Enter VR** (or use a Quest browser
 ## Roadmap
 
 - [x] WebXR hologram gallery prototype
+- [x] GitHub Pages deployment
 - [ ] Wallet connection + display owned NFTs
 - [ ] IPFS upload + minting flow
 - [ ] Simple marketplace (list / buy)
