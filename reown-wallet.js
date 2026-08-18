@@ -1,6 +1,6 @@
-/* HyperStream MetaMask-only connection
- * Desktop / Quest without MetaMask extension: MetaMask Connect shows its QR.
- * iPhone Safari: MetaMask Connect uses the MetaMask Mobile deeplink.
+/* HyperStream MetaMask Connect EVM
+ * Quest/desktop without the extension: MetaMask Connect uses QR + relay.
+ * iPhone browser: MetaMask Connect uses the MetaMask Mobile deeplink.
  * Inside MetaMask Mobile: use the injected provider directly.
  */
 let evmClient=null;
@@ -19,6 +19,11 @@ async function getClient(){
   if(typeof createEVMClient!=='function')throw Error('MetaMask Connect could not load.');
   evmClient=await createEVMClient({
     dapp:{name:'HyperStream 3D NFT Studio',url:'https://hartensteindominic.github.io/vr-3d-nft-scanner/'},
+    api:{
+      supportedNetworks:{
+        'eip155:11155111':'https://ethereum-sepolia.publicnode.com'
+      }
+    },
     ui:{showInstallModal:false}
   });
   return evmClient;
@@ -27,14 +32,11 @@ async function connectWallet(){
   const b=$('connectWalletBtn');
   if(b){b.disabled=true;b.textContent='⏳ CONNECTING…'}
   try{
-    // MetaMask Mobile in-app browser / injected provider.
     if(window.ethereum){
       status('🦊 Requesting MetaMask approval…');
       const accounts=await window.ethereum.request({method:'eth_requestAccounts'});
       if(accounts?.[0]){setConnected(b,accounts[0],window.ethereum);return;}
     }
-    // Quest / desktop browser: MetaMask Connect automatically uses QR + relay
-    // when there is no MetaMask extension. iPhone browsers use the mobile deeplink.
     const client=await getClient();
     status('🦊 Connecting MetaMask…');
     const result=await client.connect({chainIds:['0xaa36a7']});
