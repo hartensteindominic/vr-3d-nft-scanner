@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VR 3D NFT Scanner – Scan Real Objects → Holograms → NFTs</title>
+  <title>VR 3D NFT Scanner – Hologram Gallery</title>
   <link rel="stylesheet" href="css/style.css" />
   <script type="importmap">
   {
@@ -16,176 +16,107 @@
   </script>
 </head>
 <body>
-  <!-- ==================== TOP BAR ==================== -->
+  <!-- Immersive full-screen viewport -->
+  <div id="viewport-container">
+    <div id="loading-overlay">
+      <div class="spinner"></div>
+      <p>Loading hologram gallery...</p>
+    </div>
+  </div>
+
+  <!-- Elegant floating top bar -->
   <header id="top-bar">
     <div class="logo">
       <span class="logo-icon">◈</span>
       <div>
         <h1>VR 3D NFT Scanner</h1>
-        <p class="tagline">Scan Real Life → Hologram → Ownable NFT</p>
+        <p class="tagline">Scan → Hologram → NFT</p>
       </div>
     </div>
     <div class="top-actions">
       <button id="btn-connect" class="btn btn-primary">Connect Wallet</button>
       <div id="wallet-info" class="wallet-info hidden">
         <span id="wallet-address">0x...</span>
-        <span id="network-badge">Polygon</span>
+        <span id="network-badge">Amoy</span>
       </div>
     </div>
   </header>
 
-  <!-- ==================== MAIN LAYOUT ==================== -->
-  <div id="app-layout">
-    
-    <!-- LEFT PANEL: Scan + Upload -->
-    <aside id="left-panel" class="panel">
-      <section class="panel-section">
-        <h2>1. Capture Real Object</h2>
-        <p class="section-desc">Scan with your phone (LiDAR / Polycam / Scaniverse) or upload an existing 3D model.</p>
-        
-        <div class="scan-modes">
-          <button class="mode-btn active" data-mode="guided">Guided Scan</button>
-          <button class="mode-btn" data-mode="upload">Upload GLB</button>
-          <button class="mode-btn" data-mode="camera">Camera (Beta)</button>
-        </div>
-
-        <!-- Guided Scan UI -->
-        <div id="guided-scan" class="mode-content">
-          <div class="scan-steps">
-            <div class="step active" data-step="1">
-              <span class="step-num">1</span>
-              <div>
-                <strong>Position Object</strong>
-                <p>Place object on a flat surface with good lighting</p>
-              </div>
-            </div>
-            <div class="step" data-step="2">
-              <span class="step-num">2</span>
-              <div>
-                <strong>Walk Around</strong>
-                <p>Slowly circle the object 2–3 times capturing all angles</p>
-              </div>
-            </div>
-            <div class="step" data-step="3">
-              <span class="step-num">3</span>
-              <div>
-                <strong>Process & Export</strong>
-                <p>Export as GLB from Polycam / Scaniverse / KIRI</p>
-              </div>
-            </div>
-          </div>
-          <button id="btn-start-scan-guide" class="btn btn-secondary full">Start Guided Scan Flow</button>
-          <p class="hint">Recommended apps: <strong>Polycam</strong>, <strong>Scaniverse</strong>, <strong>KIRI Engine</strong></p>
-        </div>
-
-        <!-- Upload UI -->
-        <div id="upload-mode" class="mode-content hidden">
-          <div id="drop-zone" class="drop-zone">
-            <div class="drop-icon">⬆</div>
-            <p>Drag & drop your <strong>.glb / .gltf</strong> here</p>
-            <p class="small">or click to browse</p>
-            <input type="file" id="file-input" accept=".glb,.gltf,model/gltf-binary,model/gltf+json" hidden />
-          </div>
-          <div id="upload-status" class="status-box hidden"></div>
-        </div>
-
-        <!-- Camera Beta -->
-        <div id="camera-mode" class="mode-content hidden">
-          <p class="warning">Browser camera + photogrammetry is experimental. Best results still come from dedicated scan apps.</p>
-          <button id="btn-camera" class="btn btn-secondary full" disabled>Open Camera Capture (Coming Soon)</button>
-        </div>
-      </section>
-
-      <section class="panel-section">
-        <h2>2. Current Model</h2>
-        <div id="current-model-info" class="model-info">
-          <p class="empty">No model loaded yet</p>
-        </div>
-        <button id="btn-clear-model" class="btn btn-ghost full hidden">Clear Model</button>
-      </section>
-
-      <section class="panel-section">
-        <h2>Quick Tips</h2>
-        <ul class="tips">
-          <li>Good lighting = better texture quality</li>
-          <li>Avoid reflective / transparent objects</li>
-          <li>Keep poly count under ~100k for smooth VR</li>
-          <li>Export as GLB (binary glTF) for best compatibility</li>
-        </ul>
-      </section>
-    </aside>
-
-    <!-- CENTER: 3D Viewport -->
-    <main id="viewport-container">
-      <div id="loading-overlay">
-        <div class="spinner"></div>
-        <p>Loading hologram engine...</p>
-      </div>
-      <div id="viewport-ui">
-        <div class="viewport-stats">
-          <span id="fps">-- FPS</span>
-          <span id="objects-count">0 Holograms</span>
-        </div>
-        <button id="btn-enter-vr" class="btn btn-vr">Enter VR</button>
-      </div>
-    </main>
-
-    <!-- RIGHT PANEL: Crypto + NFT + Marketplace -->
-    <aside id="right-panel" class="panel">
-      <section class="panel-section">
-        <h2>3. Mint as NFT</h2>
-        <div id="mint-form">
-          <label>Name
-            <input type="text" id="nft-name" placeholder="My Scanned Object" maxlength="64" />
-          </label>
-          <label>Description
-            <textarea id="nft-desc" placeholder="Scanned in real life and minted as a unique 3D hologram NFT..." rows="3"></textarea>
-          </label>
-          <label>Royalty %
-            <input type="number" id="nft-royalty" value="5" min="0" max="20" step="0.5" />
-          </label>
-          <div class="mint-actions">
-            <button id="btn-prepare-mint" class="btn btn-secondary full" disabled>Prepare Metadata</button>
-            <button id="btn-mint" class="btn btn-primary full" disabled>Mint NFT</button>
-          </div>
-          <div id="mint-status" class="status-box hidden"></div>
-        </div>
-      </section>
-
-      <section class="panel-section">
-        <h2>My Collection</h2>
-        <div id="collection-list" class="collection-list">
-          <p class="empty">Connect wallet to see your NFTs</p>
-        </div>
-      </section>
-
-      <section class="panel-section">
-        <h2>Marketplace</h2>
-        <div class="marketplace-placeholder">
-          <p>Buy • Sell • Trade 3D Holograms</p>
-          <button class="btn btn-ghost full" disabled>Browse Listings (Coming)</button>
-          <button class="btn btn-ghost full" disabled>List Current Model</button>
-        </div>
-      </section>
-
-      <section class="panel-section network-info">
-        <h3>Network</h3>
-        <p>Currently targeting: <strong>Polygon Amoy (Testnet)</strong></p>
-        <p class="small">Low fees • Fast finality • Easy for testing</p>
-        <p class="small">Production can switch to Polygon mainnet or Solana.</p>
-      </section>
-    </aside>
-  </div>
-
-  <!-- ==================== MODALS ==================== -->
-  <div id="modal-overlay" class="modal-overlay hidden">
-    <div class="modal">
-      <button class="modal-close" id="modal-close">×</button>
-      <div id="modal-content"></div>
+  <!-- Left floating panel – Scan / Upload -->
+  <aside id="left-panel" class="floating-panel">
+    <div class="panel-header">
+      <h2>Capture</h2>
+      <button class="panel-toggle" data-panel="left">−</button>
     </div>
+    <div class="panel-body">
+      <div class="scan-modes">
+        <button class="mode-btn active" data-mode="guided">Guided</button>
+        <button class="mode-btn" data-mode="upload">Upload</button>
+      </div>
+
+      <div id="guided-scan" class="mode-content">
+        <ol class="steps">
+          <li>Place object in good light</li>
+          <li>Circle slowly 2–3 times (Polycam / Scaniverse)</li>
+          <li>Export as <strong>GLB</strong></li>
+        </ol>
+        <button id="btn-start-scan-guide" class="btn btn-secondary full">Start Guide</button>
+      </div>
+
+      <div id="upload-mode" class="mode-content hidden">
+        <div id="drop-zone" class="drop-zone">
+          <div class="drop-icon">⬆</div>
+          <p>Drop <strong>.glb</strong> here</p>
+          <input type="file" id="file-input" accept=".glb,.gltf" hidden />
+        </div>
+        <div id="upload-status" class="status-box hidden"></div>
+      </div>
+
+      <div id="current-model-info" class="model-info">
+        <p class="empty">No model loaded</p>
+      </div>
+      <button id="btn-clear-model" class="btn btn-ghost full hidden">Clear Model</button>
+    </div>
+  </aside>
+
+  <!-- Right floating panel – Mint + Collection -->
+  <aside id="right-panel" class="floating-panel">
+    <div class="panel-header">
+      <h2>Mint NFT</h2>
+      <button class="panel-toggle" data-panel="right">−</button>
+    </div>
+    <div class="panel-body">
+      <label>Name
+        <input type="text" id="nft-name" placeholder="My Hologram" maxlength="64" />
+      </label>
+      <label>Description
+        <textarea id="nft-desc" placeholder="Scanned from real life..." rows="2"></textarea>
+      </label>
+
+      <div class="mint-actions">
+        <button id="btn-prepare-mint" class="btn btn-secondary full" disabled>Upload to IPFS</button>
+        <button id="btn-mint" class="btn btn-primary full" disabled>Mint NFT</button>
+      </div>
+      <div id="mint-status" class="status-box hidden"></div>
+
+      <div class="divider"></div>
+
+      <h3>My Collection</h3>
+      <div id="collection-list" class="collection-list">
+        <p class="empty">Connect wallet to view</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Bottom center controls -->
+  <div id="bottom-bar">
+    <div class="stats">
+      <span id="objects-count">1 Hologram</span>
+    </div>
+    <button id="btn-enter-vr" class="btn btn-vr">Enter VR</button>
   </div>
 
-  <!-- Toast notifications -->
+  <!-- Toast -->
   <div id="toast-container"></div>
 
   <script type="module" src="js/app.js"></script>
