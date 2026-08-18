@@ -2,6 +2,9 @@
  * Quest/desktop without the extension: MetaMask Connect uses QR + relay.
  * iPhone browser: MetaMask Connect uses the MetaMask Mobile deeplink.
  * Inside MetaMask Mobile: use the injected provider directly.
+ *
+ * Uses the current MetaMask Connect EVM API. EVM clients do not need the
+ * legacy supportedNetworks initialization that caused the previous error.
  */
 let evmClient=null;
 const $=id=>document.getElementById(id);
@@ -14,17 +17,12 @@ function setConnected(b,a,provider){
 async function getClient(){
   if(evmClient)return evmClient;
   status('Loading MetaMask…');
-  const mod=await import('https://esm.sh/@metamask/connect-evm@2.1.1?bundle');
+  const mod=await import('https://esm.sh/@metamask/connect-evm?bundle');
   const createEVMClient=mod.createEVMClient;
   if(typeof createEVMClient!=='function')throw Error('MetaMask Connect could not load.');
   evmClient=await createEVMClient({
     dapp:{name:'HyperStream 3D NFT Studio',url:'https://hartensteindominic.github.io/vr-3d-nft-scanner/'},
-    api:{
-      supportedNetworks:{
-        'eip155:11155111':'https://ethereum-sepolia.publicnode.com'
-      }
-    },
-    ui:{showInstallModal:false}
+    analytics:{enabled:false}
   });
   return evmClient;
 }
