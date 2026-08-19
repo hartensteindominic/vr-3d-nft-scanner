@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://hartensteindominic.github.io/vr-3d-nft-scanner/sitemap.xml
